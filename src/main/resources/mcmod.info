@@ -1,0 +1,13 @@
+[
+{
+  "modid": "cyvforge",
+  "name": "Cyvforge",
+  "description": "1.8.9 port of CyvFabric.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "authorList": ["Morpheye"],
+  "logoFile": "icon.png",
+  "screenshots": [],
+  "dependencies": []
+}
+]
