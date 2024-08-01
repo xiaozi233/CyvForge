@@ -45,7 +45,7 @@ public class CyvForge {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent preEvent) {
-		DiscordRPCHandler.init();
+		new DiscordRPCHandler().start();
 
 	}
 

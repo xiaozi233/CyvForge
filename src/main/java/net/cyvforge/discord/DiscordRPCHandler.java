@@ -1,49 +1,60 @@
 package net.cyvforge.discord;
 
-import club.minnced.discord.rpc.DiscordEventHandlers;
-import club.minnced.discord.rpc.DiscordRPC;
-import club.minnced.discord.rpc.DiscordRichPresence;
+import net.arikia.dev.drpc.DiscordEventHandlers;
+import net.arikia.dev.drpc.DiscordRPC;
+import net.arikia.dev.drpc.DiscordRichPresence;
+import net.arikia.dev.drpc.DiscordUser;
+import net.arikia.dev.drpc.callbacks.ReadyCallback;
 import net.cyvforge.CyvForge;
 import org.apache.logging.log4j.LogManager;
 
 public class DiscordRPCHandler {
-    public static DiscordRichPresence presence;
-    static long start_time;
+    private boolean running = true;
+    private long created = 0;
+    public static DiscordRPCHandler instance;
 
-    public static void init() {
-        DiscordRPC lib = DiscordRPC.INSTANCE;
-        String applicationId = "1122509451920936971";
-        DiscordEventHandlers handlers = new DiscordEventHandlers();
-        handlers.ready = (user) -> LogManager.getLogger().info("CyvForge discordRPC ready!");
-        lib.Discord_Initialize(applicationId, handlers, true, null);
-        start_time = System.currentTimeMillis() / 1000;
-        updateStatus("Just started", null, null);
+    public DiscordRPCHandler() {
+        instance = this;
+    }
 
-        // in a worker thread
-        new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                lib.Discord_RunCallbacks();
-
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException ignored) {}
+    public void start() {
+        this.created = System.currentTimeMillis();
+        DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler(new ReadyCallback() {
+            @Override
+            public void apply(DiscordUser user) {
+                LogManager.getLogger().info("DiscordRPC starting...");
+                DiscordRPCHandler.instance.updateStatus("In Main Menu", null, null);
             }
-        }, "RPC-Callback-Handler").start();
+
+        }).build();
+
+        DiscordRPC.discordInitialize("1122509451920936971", handlers, running);
+        new Thread("DiscordRPC Callback") {
+            public void run() {
+                while (running) {
+                    DiscordRPC.discordRunCallbacks();
+                    try {
+                        Thread.sleep(3000);
+                    } catch (Exception e) {}
+                }
+            }
+        }.start();
     }
 
-    public static void updateStatus(String firstline, String smallImage, String ip) {
-        try {
-            presence = new DiscordRichPresence();
-            presence.largeImageKey = "icon";
-            presence.largeImageText = "CyvForge " + CyvForge.VERSION;
-            presence.startTimestamp = start_time;
-            presence.smallImageKey = smallImage;
-            presence.smallImageText = ip;
-            presence.details = firstline;
-
-            DiscordRPC.INSTANCE.Discord_UpdatePresence(presence);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void shutdown() {
+        running = false;
+        DiscordRPC.discordShutdown();
     }
+
+    //status updates
+    public void updateStatus(String firstline, String smallImage, String ip) {
+        DiscordRichPresence.Builder b = new DiscordRichPresence.Builder("");
+        b.setBigImage("icon",  "CyvForge " + CyvForge.VERSION);
+        b.setDetails(firstline);
+        b.setStartTimestamps(this.created);
+        b.setSmallImage(smallImage, ip);
+
+        DiscordRPC.discordUpdatePresence(b.build());
+    }
+
 }

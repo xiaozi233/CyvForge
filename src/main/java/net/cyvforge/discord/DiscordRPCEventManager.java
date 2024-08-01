@@ -18,15 +18,15 @@ public class DiscordRPCEventManager {
         if (e.entity == null || !(e.entity.equals(Minecraft.getMinecraft().thePlayer))) return;
         try {
             if (Minecraft.getMinecraft().isSingleplayer()) {
-                DiscordRPCHandler.updateStatus("Playing Singleplayer", null, null);
+                DiscordRPCHandler.instance.updateStatus("Playing Singleplayer", null, null);
                 return;
             }
 
             ServerData data = Minecraft.getMinecraft().getCurrentServerData();
             if (data != null && data.serverIP.equalsIgnoreCase("play.hpknetwork.xyz")) {
-                DiscordRPCHandler.updateStatus("Playing Multiplayer", "hpk", "play.hpknetwork.xyz");
+                DiscordRPCHandler.instance.updateStatus("Playing Multiplayer", "hpk", "play.hpknetwork.xyz");
             } else {
-                DiscordRPCHandler.updateStatus("Playing Multiplayer", null, null);
+                DiscordRPCHandler.instance.updateStatus("Playing Multiplayer", null, null);
             }
 
 
@@ -45,7 +45,7 @@ public class DiscordRPCEventManager {
         else if (gui instanceof GuiConnecting || gui instanceof GuiDisconnected) text = "Connecting...";
 
         if (Minecraft.getMinecraft().theWorld == null && text != null) {
-            DiscordRPCHandler.updateStatus(text, null, null);
+            DiscordRPCHandler.instance.updateStatus(text, null, null);
         }
     }
 

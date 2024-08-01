@@ -12,6 +12,7 @@ buildscript {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
+
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 /*
@@ -49,8 +50,15 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
+configurations {
+    // configuration that holds jars to include in the jar
+    extraLibs
+}
+
+
 dependencies {
-    compile 'club.minnced:java-discord-rpc:2.0.1'
+    extraLibs 'com.github.Vatuu:discord-rpc:1.6.2'
+    configurations.compile.extendsFrom(configurations.extraLibs)
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -91,6 +99,12 @@ processResources
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+jar {
+    from {
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
 
