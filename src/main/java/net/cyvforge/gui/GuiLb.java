@@ -2,6 +2,7 @@ package net.cyvforge.gui;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
+import net.cyvforge.discord.DiscordRPCHandler;
 import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.parkour.LandingAxis;
 import net.cyvforge.util.parkour.LandingBlock;
@@ -128,10 +129,10 @@ public class GuiLb extends CyvGui {
                 this.buttonList.get(4).displayString = "Cond Visible: " + CyvClientConfig.getBoolean("highlightLandingCond", false);
                 break;
             } case 4: {
-                //lb.calculateWalls(lb.bb);
+                lb.calculateWalls();
                 break;
             } case 5: {
-                //lb.resetWalls(lb.bb);
+                lb.resetWalls();
                 break;
             } case 6: {
                 lb.neoAndNormal = !lb.neoAndNormal;

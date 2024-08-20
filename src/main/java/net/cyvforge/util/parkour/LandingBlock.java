@@ -242,4 +242,7 @@ public class LandingBlock {
         }
     }
 
+    public void resetWalls() {
+        xMinWall = null; xMaxWall = null; zMinWall = null; zMaxWall = null;
+    }
 }

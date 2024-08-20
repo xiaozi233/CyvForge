@@ -18,27 +18,36 @@ public class DiscordRPCHandler {
     }
 
     public void start() {
-        this.created = System.currentTimeMillis();
-        DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler(new ReadyCallback() {
-            @Override
-            public void apply(DiscordUser user) {
-                LogManager.getLogger().info("DiscordRPC starting...");
-                DiscordRPCHandler.instance.updateStatus("In Main Menu", null, null);
-            }
-
-        }).build();
-
-        DiscordRPC.discordInitialize("1122509451920936971", handlers, running);
-        new Thread("DiscordRPC Callback") {
-            public void run() {
-                while (running) {
-                    DiscordRPC.discordRunCallbacks();
-                    try {
-                        Thread.sleep(3000);
-                    } catch (Exception e) {}
+        try {
+            this.created = System.currentTimeMillis();
+            DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler(new ReadyCallback() {
+                @Override
+                public void apply(DiscordUser user) {
+                    LogManager.getLogger().info("DiscordRPC starting...");
+                    DiscordRPCHandler.instance.updateStatus("In Main Menu", null, null);
                 }
-            }
-        }.start();
+
+            }).build();
+
+            DiscordRPC.discordInitialize("1122509451920936971", handlers, running);
+            Thread RPCThread = new Thread("DiscordRPC Callback") {
+                public void run() {
+                    while (running) {
+                        DiscordRPC.discordRunCallbacks();
+                        try {
+                            Thread.sleep(3000);
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            };
+            RPCThread.setPriority(Thread.MIN_PRIORITY);
+            RPCThread.start();
+
+        } catch (Throwable e) {
+            //womp womp no more discordrpc
+            LogManager.getLogger().error(e);
+        }
     }
 
     public void shutdown() {
@@ -48,13 +57,15 @@ public class DiscordRPCHandler {
 
     //status updates
     public void updateStatus(String firstline, String smallImage, String ip) {
-        DiscordRichPresence.Builder b = new DiscordRichPresence.Builder("");
-        b.setBigImage("icon",  "CyvForge " + CyvForge.VERSION);
-        b.setDetails(firstline);
-        b.setStartTimestamps(this.created);
-        b.setSmallImage(smallImage, ip);
+        try {
+            DiscordRichPresence.Builder b = new DiscordRichPresence.Builder("");
+            b.setBigImage("icon", "CyvForge " + CyvForge.VERSION);
+            b.setDetails(firstline);
+            b.setStartTimestamps(this.created);
+            b.setSmallImage(smallImage, ip);
 
-        DiscordRPC.discordUpdatePresence(b.build());
+            DiscordRPC.discordUpdatePresence(b.build());
+        } catch (Throwable ignored) {}
     }
 
 }
