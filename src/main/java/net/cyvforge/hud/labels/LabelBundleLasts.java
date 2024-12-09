@@ -65,9 +65,9 @@ public class LabelBundleLasts extends LabelBundle {
 
                 MovementInput input = mc.thePlayer.movementInput;
                 String str = (input.moveForward > 0 ? "W" : "")
-                        + (input.moveStrafe < 0 ? "A" : "")
+                        + (input.moveStrafe > 0 ? "A" : "")
                         + (input.moveForward < 0 ? "S" : "")
-                        + (input.moveStrafe > 0 ? "D" : "");
+                        + (input.moveStrafe < 0 ? "D" : "");
 
                 drawString("Last Input: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
                 drawString(str, pos.getAbsoluteX() + 1 + font.getStringWidth("Last Input: ")
