@@ -285,7 +285,7 @@ public class ParkourTickListener {
 
             if ((stored_v>=min && stored_v<=max) || (stored_v<=min && stored_v>=max)) {
 
-                if (Math.abs(stored_v)*0.91F*stored_slip < 0.003) {
+                if (Math.abs(stored_v)*0.91F*stored_slip < 0.005) {
                     CyvForge.sendChatMessage("Hit inertia at tick " + (airtime-1) + ", previous v = " + df.format(stored_v));
                 } else {
                     CyvForge.sendChatMessage("Missed inertia at tick " + (airtime-1) + ", previous v = " + df.format(stored_v));
