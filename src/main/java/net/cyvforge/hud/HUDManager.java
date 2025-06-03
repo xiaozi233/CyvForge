@@ -62,7 +62,7 @@ public class HUDManager {
 
         if (CommandMacro.macroRunning > 0) { //macrorunning
             ScaledResolution sr = new ScaledResolution(mc);
-            GuiUtils.drawString("MACRO",
+            GuiUtils.drawString(" ",
                     sr.getScaledWidth()/2 - mc.fontRendererObj.getStringWidth(" ") / 2,
                     sr.getScaledHeight()/5, 0xFFFF0000, false);
         }
