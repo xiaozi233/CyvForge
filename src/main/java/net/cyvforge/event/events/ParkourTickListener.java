@@ -48,7 +48,20 @@ public class ParkourTickListener {
     public static float jf = 0, jp = 0; //jump angles
     public static float sf = 0, sp = 0; //second turn angles
     public static float pf = 0, pp = 0; //preturn angles
+    public static float tf = 0, tp = 0; //third turn
+    public static float fof = 0, fop = 0; //fourth turn
+    public static float fif = 0, fip = 0; //fith turn
+    public static float sif = 0, sip = 0; //sixth turn
+    public static float sevf = 0, sevp = 0; //seventh turn
+    public static float eif = 0, eip = 0; //eigth angles
+    public static float nf = 0, np = 0; //ninth turn
+    public static float tef = 0, tep = 0; //tenth turn
+    public static float elf = 0, elp = 0; //eleventh turn
+    public static float twf = 0, twp = 0; //twelth turn
+    public static float thf = 0, thp = 0; //thirteenth angles
+    public static float fotf = 0, fotp = 0; //fourteenth angles
 
+    
     //inertia
     public static double stored_v = 0;
     public static float stored_slip = 1;
@@ -163,7 +176,38 @@ public class ParkourTickListener {
         } else if (airtime == 2 && lastTick.vy > 0) {
             sf = f;
             sp = p;
+        } else if (airtime == 3) {
+            tf = f;
+            tp = p;
+        } else if (airtime == 4) {
+            fof = f;
+            fop = p;
+        } else if (airtime == 5) {
+            fif = f;
+            fip = p;
+        } else if (airtime == 6) {
+            sif = f;
+            sip = p;
+        } else if (airtime == 7) {
+            sevf = f;
+            sevp = p;
+        } else if (airtime == 8) {
+            eif = f;
+            eip = p;
+        } else if (airtime == 9) {
+            nf = f;
+            np = p;
+        } else if (airtime == 10) {
+            tef = f;
+            tep = p;
+        } else if (airtime == 11 && lastTick.vy < 0) {
+            elf = f;
+            elp = p;
+        } else if (airtime == 12 && lastTick.vy < 0) {
+            twf = f;
+            twp = p;
         }
+        
 
         //last 45
         if (lastTick.keys[0] && ((lastTick.keys[1] && lastTick.keys[3]) || (!lastTick.keys[1] && !lastTick.keys[3]))
