@@ -16,7 +16,7 @@ public class KeystrokesHUD extends DraggableHUDElement {
     }
 
     public List<Key> keys;
-    public int size = 66;
+    public int size = 100;
 
     @Override
     public ScreenPosition getDefaultPosition() {
@@ -56,7 +56,7 @@ public class KeystrokesHUD extends DraggableHUDElement {
                     key.isDown() ? new Color(255, 255, 255, 102).getRGB() : new Color(20, 20, 20, 102).getRGB());
 
             GuiUtils.drawCenteredString(displayString, pos.getAbsoluteX() + key.x + key.width/2,
-                    pos.getAbsoluteY() + key.y + key.height/2 - (int)(mc.fontRendererObj.FONT_HEIGHT * (size*scale/66.0F)/2) + 1,
+                    pos.getAbsoluteY() + key.y + key.height/2 - (int)(mc.fontRendererObj.FONT_HEIGHT * (size*scale/100.0F)/2) + 1,
                     key.isDown() ? (int) CyvClientColorHelper.color1.drawColor : Color.white.getRGB(), true);
         }
     }
