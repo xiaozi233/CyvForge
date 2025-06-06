@@ -35,6 +35,9 @@ public class CommandMacro extends CyvCommand {
 
     public static void runMacro(String[] args) {
         MacroFileInit.swapFile(CyvClientConfig.getString("currentMacro", "macro"));
+        if (!Minecraft.getMinecraft().isSingleplayer()) {
+            CyvForge.sendChatMessage("No permission to run macro.");
+            return;
         }
 
         try {
