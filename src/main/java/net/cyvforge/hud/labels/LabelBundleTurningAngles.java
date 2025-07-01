@@ -419,7 +419,75 @@ public class LabelBundleTurningAngles extends LabelBundle {
                         , (int) (pos.getAbsoluteY() + 1), color2);
             }
         });
+ 
+        this.labels.add(new DraggableHUDElement() {
+            public String getName() {return "labelThirtenthTurn";}
+            public String getDisplayName() {return "13: ";}
+            public int getWidth() {return getLabelWidth(getDisplayName());}
+            public int getHeight() {return getLabelHeight();}
+            public ScreenPosition getDefaultPosition() {return new ScreenPosition(200, 31);}
+            public void render(ScreenPosition pos) {
+                if (!this.isVisible) return;
+                long color1 = CyvClientColorHelper.color1.drawColor;
+                long color2 = CyvClientColorHelper.color2.drawColor;
+                FontRenderer font = mc.fontRendererObj;
 
+                DecimalFormat df = CyvForge.df;
+                String tht = df.format(ParkourTickListener.formatYaw(ParkourTickListener.thf - ParkourTickListener.twf));
+
+                drawString("13: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
+                drawString(tht, pos.getAbsoluteX() + 1 + font.getStringWidth("13: ")
+                        , (int) (pos.getAbsoluteY() + 1), color2);
+            }
+            public void renderDummy(ScreenPosition pos) {
+                int d = CyvClientConfig.getInt("df",3);
+                long color1 = CyvClientColorHelper.color1.drawColor;
+                long color2 = CyvClientColorHelper.color2.drawColor;
+                FontRenderer font = mc.fontRendererObj;
+
+                String str = "0.";
+                for (int i=0; i<CyvClientConfig.getInt("df",3); i++) str += "0";
+
+                drawString("13: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
+                drawString(str, pos.getAbsoluteX() + 1 + font.getStringWidth("13: ")
+                        , (int) (pos.getAbsoluteY() + 1), color2);
+            }
+        });
+      
+         this.labels.add(new DraggableHUDElement() {
+            public String getName() {return "labelFourteenthTurn";}
+            public String getDisplayName() {return "14: ";}
+            public int getWidth() {return getLabelWidth(getDisplayName());}
+            public int getHeight() {return getLabelHeight();}
+            public ScreenPosition getDefaultPosition() {return new ScreenPosition(200, 22);}
+            public void render(ScreenPosition pos) {
+                if (!this.isVisible) return;
+                long color1 = CyvClientColorHelper.color1.drawColor;
+                long color2 = CyvClientColorHelper.color2.drawColor;
+                FontRenderer font = mc.fontRendererObj;
+
+                DecimalFormat df = CyvForge.df;
+                String ftt = df.format(ParkourTickListener.formatYaw(ParkourTickListener.ftf - ParkourTickListener.thf));
+
+                drawString("14: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
+                drawString(twt, pos.getAbsoluteX() + 1 + font.getStringWidth("14: ")
+                        , (int) (pos.getAbsoluteY() + 1), color2);
+            }
+            public void renderDummy(ScreenPosition pos) {
+                int d = CyvClientConfig.getInt("df",3);
+                long color1 = CyvClientColorHelper.color1.drawColor;
+                long color2 = CyvClientColorHelper.color2.drawColor;
+                FontRenderer font = mc.fontRendererObj;
+
+                String str = "0.";
+                for (int i=0; i<CyvClientConfig.getInt("df",3); i++) str += "0";
+
+                drawString("14: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
+                drawString(str, pos.getAbsoluteX() + 1 + font.getStringWidth("14: ")
+                        , (int) (pos.getAbsoluteY() + 1), color2);
+            }
+        });
+        
         this.labels.add(new DraggableHUDElement() {
             public String getName() {return "labelPreturn";}
             public String getDisplayName() {return "Preturn";}
