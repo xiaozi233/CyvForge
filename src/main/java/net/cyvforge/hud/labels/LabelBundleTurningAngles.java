@@ -470,7 +470,7 @@ public class LabelBundleTurningAngles extends LabelBundle {
                 String ftt = df.format(ParkourTickListener.formatYaw(ParkourTickListener.ftf - ParkourTickListener.thf));
 
                 drawString("14: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
-                drawString(twt, pos.getAbsoluteX() + 1 + font.getStringWidth("14: ")
+                drawString(ftt, pos.getAbsoluteX() + 1 + font.getStringWidth("14: ")
                         , (int) (pos.getAbsoluteY() + 1), color2);
             }
             public void renderDummy(ScreenPosition pos) {
