@@ -59,7 +59,7 @@ public class ParkourTickListener {
     public static float elf = 0, elp = 0; //eleventh turn
     public static float twf = 0, twp = 0; //twelth turn
     public static float thf = 0, thp = 0; //thirteenth angles
-    public static float fotf = 0, fotp = 0; //fourteenth angles
+    public static float ftf = 0, ftp = 0; //fourteenth angles
 
     
     //inertia
@@ -206,6 +206,13 @@ public class ParkourTickListener {
         } else if (airtime == 12 && lastTick.vy < 0) {
             twf = f;
             twp = p;
+        } else if (airtime == 13) {
+            thf = f;
+            thp = p;
+        } else if (airtime == 14) {
+            ftf = f;
+            ftp = p;
+            
         }
         
 
