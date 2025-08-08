@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class CyvForge {
 	public static CyvClientConfig config = new CyvClientConfig();
 	public static DecimalFormat df = new DecimalFormat("#");
 	public static ColorTheme theme = ColorTheme.CYVISPIRIA;
+	public static final Logger LOGGER = LogManager.getLogger(MODID);
 
 	@Mod.Instance(CyvForge.MODID)
 	public static CyvForge instance;

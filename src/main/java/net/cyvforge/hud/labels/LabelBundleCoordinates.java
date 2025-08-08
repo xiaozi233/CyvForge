@@ -9,6 +9,7 @@ import net.cyvforge.hud.structure.DraggableHUDElement;
 import net.cyvforge.hud.structure.ScreenPosition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.cyvforge.integration.OptiFineIntegration;
 
 import java.text.DecimalFormat;
 
@@ -26,10 +27,14 @@ public class LabelBundleCoordinates extends LabelBundle {
                 if (!this.isVisible) return;
                 long color1 = CyvClientColorHelper.color1.drawColor;
                 long color2 = CyvClientColorHelper.color2.drawColor;
+                int minFPS = OptiFineIntegration.getMinFps();
                 FontRenderer font = mc.fontRendererObj;
                 drawString("FPS: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1 + getHeight()*0, color1);
                 drawString(Minecraft.getDebugFPS(), pos.getAbsoluteX() + 1 + font.getStringWidth("FPS: ")
                         , pos.getAbsoluteY() + 1, color2);
+                if (minFPS != -1) {
+                   drawString(" / " + minFPS, pos.getAbsoluteX() + 1 + font.getStringWidth("FPS: " + Minecraft.getDebugFPS()), pos.getAbsoluteY() + 1, color2);
+                }
             }
             public void renderDummy(ScreenPosition pos) {
                 int d = CyvClientConfig.getInt("df",5);
