@@ -3,6 +3,8 @@ package net.cyvforge;
 import net.cyvforge.config.ColorTheme;
 import net.cyvforge.config.CyvClientColorHelper;
 import net.cyvforge.config.CyvClientConfig;
+import net.cyvforge.discord.DiscordRPCEventManager;
+import net.cyvforge.discord.DiscordRPCHandler;
 import net.cyvforge.event.CommandInitializer;
 import net.cyvforge.event.ConfigLoader;
 import net.cyvforge.event.events.GuiHandler;
@@ -33,18 +35,19 @@ import java.util.List;
 @Mod(modid = CyvForge.MODID, version = CyvForge.VERSION)
 public class CyvForge {
 	public static final String MODID = "cyvforge";
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "1.1";
+	public static final Logger LOGGER = LogManager.getLogger(MODID);
 
 	public static CyvClientConfig config = new CyvClientConfig();
 	public static DecimalFormat df = new DecimalFormat("#");
 	public static ColorTheme theme = ColorTheme.CYVISPIRIA;
-	public static final Logger LOGGER = LogManager.getLogger(MODID);
 
 	@Mod.Instance(CyvForge.MODID)
 	public static CyvForge instance;
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent preEvent) {
+		new DiscordRPCHandler().start();
 
 	}
 
@@ -60,6 +63,7 @@ public class CyvForge {
 
 		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
 		MinecraftForge.EVENT_BUS.register(new MacroListener());
+		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());
 
 		LogManager.getLogger().info("CyvForge mod initialized!");
 
@@ -74,9 +78,9 @@ public class CyvForge {
 	public static void sendChatMessage(Object text) {
 		try {
 			String chatColor2 = CyvClientConfig.getBoolean("whiteChat", false) ?
-					CyvClientColorHelper.colors.get(12).chatColor : CyvClientColorHelper.color2.chatColor;
+					CyvClientColorHelper.colors.get(12).getChatFormatting() : CyvClientColorHelper.color2.getChatFormatting();
 			Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new ChatComponentText(
-					CyvClientColorHelper.color1.chatColor + "<Cyv> " + chatColor2 + text.toString()));
+					CyvClientColorHelper.color1.getChatFormatting() + "<Cyv> " + chatColor2 + text.toString()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

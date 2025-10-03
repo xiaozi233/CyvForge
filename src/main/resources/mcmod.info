@@ -6,8 +6,8 @@
     "version": "${version}",
     "mcversion": "${mcversion}",
     "updateUrl": "",
-    "authorList": ["Morpheye", "Impulse188"],
-    "credits": "xiaozi0721",
+    "authorList": ["Morpheye", "xiaozi0721"],
+    "credits": "",
     "logoFile": "icon.png",
     "screenshots": [],
     "dependencies": []

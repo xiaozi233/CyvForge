@@ -8,9 +8,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.AxisAlignedBB;
 
+import java.util.Arrays;
+
 public class CommandSetbox extends CyvCommand {
     public CommandSetbox() {
         super("setbox");
+        this.usage = "<x1> <x2> <y1> <y2> <z1> <z2>";
         this.helpString = "Creates landing zone with set dimensions.";
     }
 
@@ -31,12 +34,13 @@ public class CommandSetbox extends CyvCommand {
 
             }
         } catch (Exception e) {
+            e.printStackTrace();
             CyvForge.sendChatMessage("Invalid setbox syntax.");
         }
     }
 
     private static AxisAlignedBB getAxisAlignedBB(String[] args) {
-        AxisAlignedBB player = Minecraft.getMinecraft().thePlayer.getCollisionBoundingBox();
+        AxisAlignedBB player = Minecraft.getMinecraft().thePlayer.getEntityBoundingBox();
 
         double lengthX = Math.abs(player.maxX - player.minX);
         double lengthZ = Math.abs(player.maxZ - player.minZ);
@@ -47,6 +51,7 @@ public class CommandSetbox extends CyvCommand {
         double y2 = Double.parseDouble(args[3]);
         double z1 = Double.parseDouble(args[4]) + lengthZ/2;
         double z2 = Double.parseDouble(args[5]) - lengthZ/2;
+
         return new AxisAlignedBB(Math.min(x1, x2), Math.min(y1, y2), Math.min(z1, z2),
                 Math.max(x1, x2), Math.max(y1, y2), Math.max(z1, z2));
     }

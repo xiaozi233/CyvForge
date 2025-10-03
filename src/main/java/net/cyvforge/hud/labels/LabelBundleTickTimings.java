@@ -22,19 +22,18 @@ public class LabelBundleTickTimings extends LabelBundle {
             public ScreenPosition getDefaultPosition() {return new ScreenPosition(0, 56);}
             public void render(ScreenPosition pos) {
                 if (!this.isVisible) return;
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = mc.fontRendererObj;
 
                 String timing = ParkourTickListener.lastTiming;
-                drawString("Last Timing: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1 + getHeight()*0, color1);
+                drawString("Last Timing: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
                 drawString(timing, pos.getAbsoluteX() + 1 + font.getStringWidth("Last Timing: ")
                         , pos.getAbsoluteY() + 1, color2);
             }
             public void renderDummy(ScreenPosition pos) {
-                int d = CyvClientConfig.getInt("df",5);
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = mc.fontRendererObj;
 
                 drawString("Last Timing: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
@@ -51,25 +50,24 @@ public class LabelBundleTickTimings extends LabelBundle {
             public ScreenPosition getDefaultPosition() {return new ScreenPosition(0, 65);}
             public void render(ScreenPosition pos) {
                 if (!this.isVisible) return;
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = mc.fontRendererObj;
 
                 int airtime = ParkourTickListener.lastAirtime;
 
-                drawString("Airtime: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
-                drawString(airtime, pos.getAbsoluteX() + 1 + font.getStringWidth("Airtime: ")
-                        , (int) (pos.getAbsoluteY() + 1), color2);
+                drawString("Airtime: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
+                drawString(airtime, pos.getAbsoluteX() + 1 + font.getStringWidth("Airtime: "),
+                        pos.getAbsoluteY() + 1, color2);
             }
             public void renderDummy(ScreenPosition pos) {
-                int d = CyvClientConfig.getInt("df",5);
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = mc.fontRendererObj;
 
-                drawString("Airtime: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
-                drawString(0, pos.getAbsoluteX() + 1 + font.getStringWidth("Airtime: ")
-                        , (int) (pos.getAbsoluteY() + 1), color2);
+                drawString("Airtime: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
+                drawString(0, pos.getAbsoluteX() + 1 + font.getStringWidth("Airtime: "),
+                        pos.getAbsoluteY() + 1, color2);
             }
         });
 
@@ -82,25 +80,24 @@ public class LabelBundleTickTimings extends LabelBundle {
             public ScreenPosition getDefaultPosition() {return new ScreenPosition(177, 137);}
             public void render(ScreenPosition pos) {
                 if (!this.isVisible) return;
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = mc.fontRendererObj;
 
                 int airtime = 12 - ParkourTickListener.lastAirtime;
 
-                drawString("Tier: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
-                drawString(airtime, pos.getAbsoluteX() + 1 + font.getStringWidth("Tier: ")
-                        , (int) (pos.getAbsoluteY() + 1), color2);
+                drawString("Tier: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
+                drawString(airtime, pos.getAbsoluteX() + 1 + font.getStringWidth("Tier: "),
+                        pos.getAbsoluteY() + 1, color2);
             }
             public void renderDummy(ScreenPosition pos) {
-                int d = CyvClientConfig.getInt("df",5);
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = mc.fontRendererObj;
 
-                drawString("Tier: ", pos.getAbsoluteX() + 1, (int) (pos.getAbsoluteY() + 1), color1);
-                drawString(0, pos.getAbsoluteX() + 1 + font.getStringWidth("Tier: ")
-                        , (int) (pos.getAbsoluteY() + 1), color2);
+                drawString("Tier: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
+                drawString(0, pos.getAbsoluteX() + 1 + font.getStringWidth("Tier: "),
+                        pos.getAbsoluteY() + 1, color2);
             }
         });
     }

@@ -26,6 +26,8 @@ public class GuiMacro extends CyvGui {
     ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
     int sizeX = sr.getScaledWidth()*7/8;
     int sizeY = sr.getScaledHeight()*7/8;
+//    int sizeX = 500;
+//    int sizeY = 300;
 
     SubButton addRow;
     SubButton duplicateRow;
@@ -54,12 +56,9 @@ public class GuiMacro extends CyvGui {
     @Override
     public void initGui() { //initialize the macro
         ArrayList<ArrayList<String>> macro;
-        this.macroLines = new ArrayList<MacroLine>();
+        this.macroLines = new ArrayList<>();
 
         Keyboard.enableRepeatEvents(true);
-
-        this.sizeX = sr.getScaledWidth()*7/8;
-        this.sizeY = sr.getScaledHeight()*7/8;
 
         this.addRow = new SubButton("Add Row", (sr.getScaledWidth() + sizeY +30)/2 - 75, sr.getScaledHeight()/2 - sizeY/2 + 40);
         this.duplicateRow = new SubButton("Duplicate Row", (sr.getScaledWidth() + sizeY +30)/2 - 75, sr.getScaledHeight()/2 - sizeY/2 + 60);
@@ -69,8 +68,8 @@ public class GuiMacro extends CyvGui {
         fileName.setEnableBackgroundDrawing(false);
         fileName.setText(CyvClientConfig.getString("currentMacro", "macro"));
         this.loadFile = new SubButton("Load", (sr.getScaledWidth() + sizeY +30)/2 + 25, sr.getScaledHeight()/2 - sizeY/2 + 20);
-        loadFile.sizeX = 50;
-        loadFile.enabled = true;
+        loadFile.setSizeX(50);
+        loadFile.setEnabled(true);
 
         this.macroLines.clear();
         try {
@@ -133,13 +132,13 @@ public class GuiMacro extends CyvGui {
         this.fileName.drawTextBox();
         this.loadFile.draw(mouseX, mouseY);
 
-        this.addRow.enabled = true;
+        this.addRow.setEnabled(true);
         if (this.selectedIndex > -1 && this.selectedIndex < this.macroLines.size()) {
-            this.duplicateRow.enabled = true;
-            this.deleteRow.enabled = true;
+            this.duplicateRow.setEnabled(true);
+            this.deleteRow.setEnabled(true);
         } else {
-            this.duplicateRow.enabled = false;
-            this.deleteRow.enabled = false;
+            this.duplicateRow.setEnabled(false);
+            this.deleteRow.setEnabled(false);
         }
 
 
@@ -262,7 +261,6 @@ public class GuiMacro extends CyvGui {
                 } else {
                     this.macroLines.add(selectedIndex+1, new MacroLine());
                 }
-                return;
             } catch (Exception e) {e.printStackTrace();}
         } else if (this.duplicateRow.clicked(mouseX, mouseY, mouseEvent)) {
             try {
@@ -281,7 +279,6 @@ public class GuiMacro extends CyvGui {
                 newLine.pitchField.setText(oldLine.pitchField.getText());
 
                 this.macroLines.add(selectedIndex, newLine);
-                return;
             } catch (Exception e) {}
         } else if (this.deleteRow.clicked(mouseX, mouseY, mouseEvent)) {
             try {
@@ -359,9 +356,9 @@ public class GuiMacro extends CyvGui {
         this.scroll += this.vScroll;
         this.vScroll *= 0.75;
 
-        if (this.fileName.getText().length() < 1 || this.fileName.getText().length() > 32) this.loadFile.enabled = false;
-        else if (this.fileName.getText().equals(CyvClientConfig.getString("currentMacro", "macro"))) this.loadFile.enabled = false;
-        else this.loadFile.enabled = true;
+        if (this.fileName.getText().length() < 1 || this.fileName.getText().length() > 32) this.loadFile.setEnabled(false);
+        else if (this.fileName.getText().equals(CyvClientConfig.getString("currentMacro", "macro"))) this.loadFile.setEnabled(false);
+        else this.loadFile.setEnabled(true);
     }
 
     @Override
@@ -490,34 +487,6 @@ public class GuiMacro extends CyvGui {
             this.yawField.mouseClicked(mouseX, mouseY, mouseEvent);
             this.pitchField.mouseClicked(mouseX, mouseY, mouseEvent);
 
-        }
-
-    }
-
-    class SubButton {
-        boolean enabled;
-        String text;
-        int x, y;
-        int sizeX = 150;
-        int sizeY = 15;
-
-        SubButton(String text, int x, int y) {
-            this.text = text;
-            this.x = x;
-            this.y = y;
-        }
-
-        void draw(int mouseX, int mouseY) {
-            boolean mouseDown = (mouseX > x && mouseX < x + sizeX && mouseY > y && mouseY < y + sizeY);
-            ColorTheme theme = CyvForge.theme;
-            GuiUtils.drawRoundedRect(x, y, x+sizeX, y+sizeY, 5, enabled ? (mouseDown ? theme.main1 : theme.main2) : theme.secondary1);
-            GuiUtils.drawCenteredString(this.text, x+sizeX/2, y+sizeY/2-fontRendererObj.FONT_HEIGHT/2, 0xFFFFFFFF, true);
-        }
-
-        boolean clicked(int mouseX, int mouseY, int mouseButton) {
-            if (!this.enabled) return false;
-            if (!(mouseX > x && mouseX < x+sizeX && mouseY > y && mouseY < y+sizeY && mouseButton == 0)) return false;
-            else return true;
         }
 
     }

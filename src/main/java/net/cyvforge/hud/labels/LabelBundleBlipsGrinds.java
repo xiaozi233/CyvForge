@@ -29,35 +29,35 @@ public class LabelBundleBlipsGrinds extends LabelBundle {
             public ScreenPosition getDefaultPosition() {return new ScreenPosition(177, 164);}
             public void render(ScreenPosition pos) {
                 if (!this.isVisible) return;
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 DecimalFormat df = CyvForge.df;
                 FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
 
-                drawString("Blips: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1 + getHeight()*0, color1);
+                drawString("Blips: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
                 drawString("" + ParkourTickListener.blips, pos.getAbsoluteX() + 1 + font.getStringWidth("Blips: ")
                         , pos.getAbsoluteY() + 1, color2);
 
                 drawString(" chained / Y: ", pos.getAbsoluteX() + 1 + font.getStringWidth("Blips: " + ParkourTickListener.blips),
-                        pos.getAbsoluteY() + 1 + getHeight()*0, color1);
-                drawString("" + df.format(ParkourTickListener.lastBlipHeight), pos.getAbsoluteX() + 1 +
+                        pos.getAbsoluteY() + 1, color1);
+                drawString(df.format(ParkourTickListener.lastBlipHeight), pos.getAbsoluteX() + 1 +
                                 font.getStringWidth("Blips: " + ParkourTickListener.blips + " chained / Y: "),
                         pos.getAbsoluteY()+1, color2);
             }
             public void renderDummy(ScreenPosition pos) {
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
 
-                String str = "0.";
-                for (int i=0; i<CyvClientConfig.getInt("df",5); i++) str += "0";
+                StringBuilder str = new StringBuilder("0.");
+                for (int i=0; i<CyvClientConfig.getInt("df",5); i++) str.append("0");
 
-                drawString("Blips: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1 + getHeight()*0, color1);
+                drawString("Blips: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
                 drawString("0", pos.getAbsoluteX() + 1 + font.getStringWidth("Blips: ")
                         , pos.getAbsoluteY() + 1, color2);
 
                 drawString(" chained / Y: ", pos.getAbsoluteX() + 1 + font.getStringWidth("Blips: 0"),
-                        pos.getAbsoluteY() + 1 + getHeight()*0, color1);
+                        pos.getAbsoluteY() + 1, color1);
                 drawString("" + str, pos.getAbsoluteX() + 1 +
                                 font.getStringWidth("Blips: 0 chained / Y: "),
                         pos.getAbsoluteY()+1, color2);
@@ -74,20 +74,20 @@ public class LabelBundleBlipsGrinds extends LabelBundle {
             public ScreenPosition getDefaultPosition() {return new ScreenPosition(177, 173);}
             public void render(ScreenPosition pos) {
                 if (!this.isVisible) return;
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
 
-                drawString("Grinds: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1 + getHeight()*0, color1);
+                drawString("Grinds: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
                 drawString("" + ParkourTickListener.grinds, pos.getAbsoluteX() + 1 + font.getStringWidth("Grinds: ")
                         , pos.getAbsoluteY() + 1, color2);
             }
             public void renderDummy(ScreenPosition pos) {
-                long color1 = CyvClientColorHelper.color1.drawColor;
-                long color2 = CyvClientColorHelper.color2.drawColor;
+                long color1 = CyvClientColorHelper.color1.getDrawColor();
+                long color2 = CyvClientColorHelper.color2.getDrawColor();
                 FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
 
-                drawString("Grinds: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1 + getHeight()*0, color1);
+                drawString("Grinds: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
                 drawString("0", pos.getAbsoluteX() + 1 + font.getStringWidth("Grinds: ")
                         , pos.getAbsoluteY() + 1, color2);
             }

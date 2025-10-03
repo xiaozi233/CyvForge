@@ -28,9 +28,9 @@ import java.text.DecimalFormat;
 
 public class ParkourTickListener {
     public static int airtime = 0;
-    public static PosTick lastTick = new PosTick(0, 0, 0, 0, new boolean[]{false, false, false, false, false, false, false});
-    public static PosTick secondLastTick = new PosTick(0, 0, 0, 0, new boolean[]{false, false, false, false, false, false, false});
-    public static PosTick thirdLastTick = new PosTick(0, 0, 0, 0, new boolean[]{false, false, false, false, false, false, false});
+    public static PosTick lastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
+    public static PosTick secondLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
+    public static PosTick thirdLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
 
     public static int lastAirtime;
     public static double x = 0, y = 0, z = 0; //coords
@@ -46,20 +46,10 @@ public class ParkourTickListener {
     public static double hvx = 0, hvz = 0; //hit velocities
 
     public static float jf = 0, jp = 0; //jump angles
-    public static float sf = 0, sp = 0; //second turn angles
     public static float pf = 0, pp = 0; //preturn angles
-    public static float tf = 0, tp = 0; //third turn
-    public static float fof = 0, fop = 0; //fourth turn
-    public static float fif = 0, fip = 0; //fith turn
-    public static float sif = 0, sip = 0; //sixth turn
-    public static float sevf = 0, sevp = 0; //seventh turn
-    public static float eif = 0, eip = 0; //eigth angles
-    public static float nf = 0, np = 0; //ninth turn
-    public static float tef = 0, tep = 0; //tenth turn
-    public static float elf = 0, elp = 0; //eleventh turn
-    public static float twf = 0, twp = 0; //twelth turn
-    public static float thf = 0, thp = 0; //thirteenth angles
-    public static float ftf = 0, ftp = 0; //fourteenth angles
+
+    // turning angles
+    public static float[] turningAngles = new float[12];
 
     //inertia
     public static double stored_v = 0;
@@ -114,8 +104,7 @@ public class ParkourTickListener {
         calculateLastTiming();
         doCheckpoints();
 
-        if (lastTick == null) {
-        } else {
+        if (lastTick != null) {
             if ((!lastTick.onGround || !mcPlayer.onGround) && !mcPlayer.capabilities.isFlying) airtime++;
 
             x = mcPlayer.posX;
@@ -172,46 +161,8 @@ public class ParkourTickListener {
                 }
             }
 
-        } else if (airtime == 2 && lastTick.vy > 0) {
-            sf = f;
-            sp = p;
-        } else if (airtime == 3) {
-            tf = f;
-            tp = p;
-        } else if (airtime == 4) {
-            fof = f;
-            fop = p;
-        } else if (airtime == 5) {
-            fif = f;
-            fip = p;
-        } else if (airtime == 6) {
-            sif = f;
-            sip = p;
-        } else if (airtime == 7) {
-            sevf = f;
-            sevp = p;
-        } else if (airtime == 8) {
-            eif = f;
-            eip = p;
-        } else if (airtime == 9) {
-            nf = f;
-            np = p;
-        } else if (airtime == 10) {
-            tef = f;
-            tep = p;
-        } else if (airtime == 11 && lastTick.vy < 0) {
-            elf = f;
-            elp = p;
-        } else if (airtime == 12 && lastTick.vy < 0) {
-            twf = f;
-            twp = p;
-        } else if (airtime == 13) {
-            thf = f;
-            thp = p;
-        } else if (airtime == 14) {
-            ftf = f;
-            ftp = p;
         }
+
         //last 45
         if (lastTick.keys[0] && ((lastTick.keys[1] && lastTick.keys[3]) || (!lastTick.keys[1] && !lastTick.keys[3]))
                 && mcPlayer.movementInput.moveStrafe != 0 && mcPlayer.movementInput.moveForward != 0 && !mcPlayer.onGround) {
@@ -220,6 +171,11 @@ public class ParkourTickListener {
 
         //last turning
         if (f != lastTick.f) lastTurning = f - lastTick.f;
+
+        // update turning angles
+        if (airtime >= 1 && airtime <= 12) {
+            turningAngles[airtime - 1] = f - lastTick.f;
+        }
 
         //hit tick
         if (lastTick != null && mcPlayer.onGround && !lastTick.onGround && vy < 0) {
@@ -239,7 +195,7 @@ public class ParkourTickListener {
         if (landingBlock != null) { //must be lower than the landing to check it
             LandingBlockOffset.refreshPb();
 
-            for (int i = 0; i < landingBlock.bb.length; i++) {
+            for (int i=0; i<landingBlock.bb.length; i++) {
                 if ((landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (y > landingBlock.bb[i].minY)) ||
                         !landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (lastTick.y > landingBlock.bb[i].maxY)) {
                     //check the previous ticks
@@ -263,7 +219,7 @@ public class ParkourTickListener {
         if (momentumBlock != null) { //must be lower than the landing to check it
             LandingBlockOffset.refreshPb();
 
-            for (int i = 0; i < momentumBlock.bb.length; i++) {
+            for (int i=0; i<momentumBlock.bb.length; i++) {
                 if ((momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (y > momentumBlock.bb[i].minY)) ||
                         !momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (lastTick.y > momentumBlock.bb[i].maxY)) {
                     //check the previous ticks
@@ -283,7 +239,7 @@ public class ParkourTickListener {
             LandingBlockOffset.finalizePb(momentumBlock);
         }
 
-        boolean[] keys = new boolean[]{gameSettings.keyBindForward.isKeyDown(),
+        boolean[] keys = new boolean[] {gameSettings.keyBindForward.isKeyDown(),
                 gameSettings.keyBindLeft.isKeyDown(),
                 gameSettings.keyBindBack.isKeyDown(), gameSettings.keyBindRight.isKeyDown(),
                 gameSettings.keyBindJump.isKeyDown(), gameSettings.keyBindSprint.isKeyDown(),
@@ -299,7 +255,8 @@ public class ParkourTickListener {
         if (lastTick.onGround) {
             if (airtime != 0) lastAirtime = airtime;
             airtime = 0;
-        } else lastAirtime = airtime;
+        }
+        else lastAirtime = airtime;
 
     }
 
@@ -313,14 +270,13 @@ public class ParkourTickListener {
 
         //check inertia
         if (airtime == inertiaTick) {
-            if (inertiaAxis == 'x') stored_v = vx;
-            else stored_v = vz;
+            if (inertiaAxis == 'x') stored_v=vx; else stored_v=vz;
             if (airtime > 1) stored_slip = 1f;
             else if (inertiaGroundType.equals("ice")) stored_slip = 0.98f;
             else if (inertiaGroundType.equals("slime")) stored_slip = 0.8f;
             else stored_slip = 0.6f;
 
-        } else if (airtime == inertiaTick + 1) {
+        } else if (airtime == inertiaTick+1) {
 
             int tick = inertiaTick;
             double min = inertiaMin;
@@ -330,12 +286,12 @@ public class ParkourTickListener {
             DecimalFormat df = new DecimalFormat("#");
             df.setMaximumFractionDigits(d);
 
-            if ((stored_v >= min && stored_v <= max) || (stored_v <= min && stored_v >= max)) {
+            if ((stored_v>=min && stored_v<=max) || (stored_v<=min && stored_v>=max)) {
 
-                if (Math.abs(stored_v) * 0.91F * stored_slip < 0.003) {
-                    CyvForge.sendChatMessage("Hit inertia at tick " + (airtime - 1) + ", previous v = " + df.format(stored_v));
+                if (Math.abs(stored_v)*0.91F*stored_slip < 0.005) {
+                    CyvForge.sendChatMessage("Hit inertia at tick " + (airtime-1) + ", previous v = " + df.format(stored_v));
                 } else {
-                    CyvForge.sendChatMessage("Missed inertia at tick " + (airtime - 1) + ", previous v = " + df.format(stored_v));
+                    CyvForge.sendChatMessage("Missed inertia at tick " + (airtime-1) + ", previous v = " + df.format(stored_v));
                 }
 
             }
@@ -400,8 +356,8 @@ public class ParkourTickListener {
             //already jumped, started moving
             if (lastJumpTime > -1 && lastMoveTime == 0 && airtime != 0 && !(vy == 0 && lastTick.onGround)
                     && (lastTiming.contains("Pessi") || !locked)) {
-                if ((lastJumpTime + 1) == 1) lastTiming = "Max Pessi";
-                else lastTiming = "Pessi " + (lastJumpTime + 1) + " ticks";
+                if ((lastJumpTime+1) == 1) lastTiming = "Max Pessi";
+                else lastTiming = "Pessi " + (lastJumpTime+1) + " ticks";
                 locked = true;
 
                 /*
@@ -460,13 +416,14 @@ public class ParkourTickListener {
         if (gameSettings.keyBindSneak.isKeyDown()) {
             if (lastSneakTime == -2) lastSneakTime = 0;
             else lastSneakTime++;
-        } else {
+        }
+        else {
             if (lastSneakTime == -1 || lastSneakTime == -2) lastSneakTime = -2;
             else lastSneakTime = -1;
         }
 
         if ((gameSettings.keyBindSprint.isKeyDown() || lastSprintTime != -1)
-                && !lastTick.onGround) {
+                && !lastTick.onGround ) {
             lastSprintTime++;
             if (lastTiming.startsWith("Jam") && lastSprintTime == 0 && !locked && lastTick.keys[0]) {
                 if (lastJumpTime < 1) {
@@ -654,15 +611,14 @@ public class ParkourTickListener {
                     float yaw = item.getTagCompound().getFloat("coordYaw");
                     float pitch = item.getTagCompound().getFloat("coordPitch");
 
-                    String[] coords = new String[]{Minecraft.getMinecraft().thePlayer.getName(), String.valueOf(x), String.valueOf(y), String.valueOf(z), String.valueOf(yaw), String.valueOf(pitch)};
+                    String[] coords = new String[] {Minecraft.getMinecraft().thePlayer.getName(), String.valueOf(x), String.valueOf(y), String.valueOf(z), String.valueOf(yaw), String.valueOf(pitch)};
                     CheckpointTeleport.tp(Minecraft.getMinecraft().thePlayer, coords);
                     Minecraft.getMinecraft().thePlayer.setVelocity(0, 0, 0);
 
                 }
             }
 
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
 
     }
 

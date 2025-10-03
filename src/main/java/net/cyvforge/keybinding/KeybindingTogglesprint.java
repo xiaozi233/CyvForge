@@ -20,7 +20,7 @@ public class KeybindingTogglesprint extends CyvKeybinding {
                 GameSettings settings = Minecraft.getMinecraft().gameSettings;
                 KeyBinding.setKeyBindState(settings.keyBindSprint.getKeyCode(), true);
             }
-        } 
+        }
     }
 
     @Override

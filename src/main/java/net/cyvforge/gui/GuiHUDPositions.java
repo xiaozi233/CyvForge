@@ -1,5 +1,6 @@
 package net.cyvforge.gui;
 
+import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientColorHelper;
 import net.cyvforge.hud.HUDManager;
 import net.cyvforge.hud.structure.DraggableHUDElement;
@@ -28,7 +29,6 @@ public class GuiHUDPositions extends CyvGui {
         super("HUD Position");
         Collection<DraggableHUDElement> registeredRenderers = HUDManager.registeredRenderers;
         this.fromLabels = fromLabels;
-        //Keyboard.enableRepeatEvents(true);
 
         for (DraggableHUDElement renderer : registeredRenderers) {
             if (!renderer.isEnabled) continue;
@@ -50,7 +50,9 @@ public class GuiHUDPositions extends CyvGui {
 
         final float zBackup = this.zLevel;
         this.zLevel = 200;
-        GuiUtils.drawRectOutline(0, 0, this.width - 1, this.height - 1, ((Long) CyvClientColorHelper.color1.drawColor).intValue()); //GUI Border
+
+        int borderColor = (int) CyvClientColorHelper.color1.getDrawColor();
+        GuiUtils.drawRectOutline(0, 0, this.width - 1, this.height - 1, borderColor); //GUI Border
 
         for (DraggableHUDElement renderer : renderers.keySet()) {
             ScreenPosition pos = renderers.get(renderer);
@@ -58,7 +60,7 @@ public class GuiHUDPositions extends CyvGui {
 
             renderer.renderDummy(pos);
 
-            int color = ((Long) CyvClientColorHelper.color1.drawColor).intValue();
+            int color = (int) CyvClientColorHelper.color1.getDrawColor();
             if (!renderer.isVisible) color = 0xFFAAAAAA;
 
             GuiUtils.drawRectOutline(pos.getAbsoluteX(), pos.getAbsoluteY(),
