@@ -76,6 +76,7 @@ public class ParkourTickListener {
     private static int lastJumpTime = -1;
     private static int lastGroundMoveTime = -1;
     private static int lastMoveTime = -1;
+    private static int lastSideTime = -1;
     private static int lastSprintTime = -1;
     private static int lastSneakTime = -2;
 
@@ -84,6 +85,7 @@ public class ParkourTickListener {
     private static boolean hasActed = false;
     private static boolean hasCollided = false;
     private static boolean isPotentialMark = false;
+    private static boolean isPotentialStrafejam = false;
 
     //end of tick
     @SubscribeEvent
@@ -334,10 +336,14 @@ public class ParkourTickListener {
         boolean showMS = /*ModManager.getMod(ModMPKMod.class).showMilliseconds;*/false;
         GameSettings gameSettings = Minecraft.getMinecraft().gameSettings;
 
-        if (gameSettings.keyBindForward.isKeyDown() || //ANYTHING IS PRESSED
-                gameSettings.keyBindBack.isKeyDown() ||
-                gameSettings.keyBindLeft.isKeyDown() ||
-                gameSettings.keyBindRight.isKeyDown()) {
+        boolean isForwardDown = gameSettings.keyBindForward.isKeyDown();
+        boolean isBackDown =gameSettings.keyBindBack.isKeyDown();
+        boolean isSideKeyDown = gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown();
+        boolean isAnyMoveKeyDown = isSideKeyDown || isForwardDown || isBackDown;
+
+        if (isAnyMoveKeyDown) {
+            if (isSideKeyDown) lastSideTime++;
+            else lastSideTime = -1;
             lastMoveTime++;
             lastGroundMoveTime++;
             hasActed = true;
@@ -356,8 +362,10 @@ public class ParkourTickListener {
             //already jumped, started moving
             if (lastJumpTime > -1 && lastMoveTime == 0 && airtime != 0 && !(vy == 0 && lastTick.onGround)
                     && (lastTiming.contains("Pessi") || !locked)) {
-                if ((lastJumpTime+1) == 1) lastTiming = "Max Pessi";
-                else lastTiming = "Pessi " + (lastJumpTime+1) + " ticks";
+                lastTiming = "Pessi";
+                if (isSideKeyDown && (isForwardDown || isBackDown)) lastTiming = "Strafe " + lastTiming;
+                if ((lastJumpTime+1) == 1) lastTiming = "Max " + lastTiming;
+                else lastTiming = lastTiming + ' ' + (lastJumpTime+1) + " ticks";
                 locked = true;
 
                 /*
@@ -373,6 +381,7 @@ public class ParkourTickListener {
         } else { //nothing is pressed
             lastMoveTime = -1;
             lastGroundMoveTime = -1;
+            lastSideTime = -1;
         }
 
         //jumping
@@ -380,27 +389,35 @@ public class ParkourTickListener {
             lastJumpTime = 0;
             hasActed = true;
 
-            boolean isForwardDown = gameSettings.keyBindForward.isKeyDown();
-            boolean isSideKeyDown = gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown();
-
-            // JAM/MARK/BURST 判断
-            if ((lastGroundMoveTime == 0 || lastMoveTime == 0) && !locked) { // 是一个 Jam 类型的瞬发跳跃
-                // 这是关键：检测是否是一个“潜在的 Mark 跳”
-                // 条件：只按了侧向键（A/D），没有按前进键（W）
-                if (isSideKeyDown && !isForwardDown) {
-                    isPotentialMark = true; // 标记这是一个潜在的Mark跳
-                    lastTiming = "Sidejam"; // 可以给它一个临时名字，或者还是叫Jam
-                    // 注意：这里我们不 lock，因为还要等后续的 W 按键
-                } else {
-                    // 否则就是一个普通的Jam或者W+A的Jam
-                    isPotentialMark = false; // 明确这不是一个潜在的Mark跳
-                    lastTiming = "Jam";
-                    if (gameSettings.keyBindSprint.isKeyDown() && !isSideKeyDown){ // 冲刺Jam直接锁定
+            // 根据起跳时的按键，决定跳跃的“意图”
+            if ((lastGroundMoveTime == 0 || lastMoveTime == 0) && !locked) { // Jam 类型的瞬发跳跃
+                // 意图 1: Sidejam (A/D Jam) -> 这是潜在的 Mark
+                if (isSideKeyDown && !(isForwardDown || isBackDown)) {
+                    isPotentialMark = true;
+                    isPotentialStrafejam = false;
+                    lastTiming = "Sidejam"; // 正确的名称
+                }
+                // 意图 2: Strafe Jam (W+A/D Jam) -> 这是计时松开A/D的跳法
+                else if (isSideKeyDown) {
+                    isPotentialStrafejam = true;
+                    isPotentialMark = false;
+                    lastTiming = "Strafe Jam"; // 正确的名称
+                    if (gameSettings.keyBindSprint.isKeyDown()){
                         locked = true;
                     }
                 }
-            } else if (lastGroundMoveTime > -1 && !locked) { // 是一个 Burst 类型的助跑跳跃
-                isPotentialMark = false; // Burst跳不可能是Mark
+                // 意图 3: 普通 Jam -> 只按了前进键
+                else {
+                    isPotentialMark = false;
+                    isPotentialStrafejam = false;
+                    lastTiming = "Jam";
+                    if (gameSettings.keyBindSprint.isKeyDown()){
+                        locked = true;
+                    }
+                }
+            } else if (lastGroundMoveTime > -1 && !locked) { // Burst 类型的助跑跳跃
+                isPotentialMark = false;
+                isPotentialStrafejam = false;
                 if (lastSneakTime == -1) lastTiming = "Burst " + (lastGroundMoveTime) + " ticks";
                 else if (lastSneakTime > -1) lastTiming = "Burstjam " + (lastGroundMoveTime) + " ticks";
                 else lastTiming = "HH " + (lastGroundMoveTime) + " ticks";
@@ -410,8 +427,7 @@ public class ParkourTickListener {
         } else if (!lastTick.onGround && lastJumpTime > -1) { // 处于空中且正在计时
             lastJumpTime++;
 
-            // 在这里检测 MARK 的最终触发！
-            // 条件：必须是潜在的Mark跳 + 在空中 + 之前未锁定 + 按下了W键
+            // 1. MARK 触发 (来自 Sidejam 后按 W)
             if (isPotentialMark && !locked && gameSettings.keyBindForward.isKeyDown()) {
                 if (lastJumpTime == 1) {
                     lastTiming = "Max Mark";
@@ -419,15 +435,23 @@ public class ParkourTickListener {
                     lastTiming = "Mark " + lastJumpTime + " ticks";
                 }
                 locked = true;
-                isPotentialMark = false; // 状态已被消耗，重置
-            }
-
-        } else { // 既不跳跃也不在空中
-            lastJumpTime = -1;
-            // 如果在落地时，潜在的Mark状态还未被消耗，则重置它
-            if (isPotentialMark) {
                 isPotentialMark = false;
             }
+
+            // 2. STRAFE JAM 触发 (来自 W+A/D Jam 后松开 A/D)
+            if (isPotentialStrafejam) {
+                if (isSideKeyDown) { // 只要还按着A/D，就实时更新
+                    lastTiming = "Strafe Jam " + (lastSideTime+1) + " ticks";
+                } else { // 一旦松开A/D，就锁定计时
+                    locked = true;
+                    isPotentialStrafejam = false;
+                }
+            }
+
+        } else { // 既不跳跃也不在空中 (可能已落地)
+            lastJumpTime = -1;
+            if (isPotentialMark) isPotentialMark = false;
+            if (isPotentialStrafejam) isPotentialStrafejam = false; // 更新变量名
         }
 
         //sneaking
@@ -440,20 +464,30 @@ public class ParkourTickListener {
             else lastSneakTime = -1;
         }
 
-        if ((gameSettings.keyBindSprint.isKeyDown() || lastSprintTime != -1)
-                && !lastTick.onGround ) {
+        if ((gameSettings.keyBindSprint.isKeyDown() || lastSprintTime != -1) && !lastTick.onGround) {
             lastSprintTime++;
-            // FMM 的判断：必须是 Jam 跳，且不是一个潜在的 Mark 跳
-            if (lastTiming.startsWith("Jam") && !isPotentialMark && lastSprintTime == 0 && !locked && lastTick.keys[0]) {
-                if (lastJumpTime >= 1)  {
+
+            // FMM (来自普通 Jam)
+            if (lastTiming.startsWith("Jam") && !isPotentialMark && !isPotentialStrafejam && lastSprintTime == 0 && !locked && lastTick.keys[0]) {
+                if (lastJumpTime >= 1) {
                     if (lastJumpTime == 1) lastTiming = "Max FMM";
                     else lastTiming = "FMM " + (lastJumpTime) + " ticks";
                     locked = true;
                 }
             }
+
+            // Strafe FMM (来自 Strafe Jam)
+            if (isPotentialStrafejam && lastSprintTime == 0 && !locked) {
+                if (lastJumpTime >= 1) {
+                    if (lastJumpTime == 1) lastTiming = "Max Strafe FMM";
+                    else lastTiming = "Strafe FMM " + lastJumpTime + " ticks";
+                    locked = true; // 锁定状态，覆盖 Strafe Jam 的显示
+                    isPotentialStrafejam = false; // 消耗掉状态
+                }
+            }
+
         } else {
             lastSprintTime = -1;
-            // 原来的 Mark 逻辑在这里，现在已经不需要了，所以整个 else 块可以为空，或者直接删除
         }
 
         //reset
@@ -496,6 +530,7 @@ public class ParkourTickListener {
         if (lastJumpTime > 999) lastJumpTime = 999;
         if (lastGroundMoveTime > 999) lastGroundMoveTime = 999;
         if (lastMoveTime > 999) lastMoveTime = 999;
+        if (lastSideTime > 999) lastSideTime = 999;
         if (lastSprintTime > 999) lastSprintTime = 999;
     }
 
@@ -505,6 +540,7 @@ public class ParkourTickListener {
         grindStarted = false;
         hasCollided = false;
         isPotentialMark = false;
+        isPotentialStrafejam = false;
     }
 
     public static class PosTick {
