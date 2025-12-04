@@ -29,6 +29,7 @@ public class CyvClientConfig {
         configFields.put("highlightLanding", new ConfigValue<Boolean>(false));
         configFields.put("highlightLandingCond", new ConfigValue<Boolean>(false));
         configFields.put("momentumPbCancelling", new ConfigValue<Boolean>(false));
+        configFields.put("invfmm", new ConfigValue<Boolean>(false));
 
         // label specific
         configFields.put("showFacingAxis", new ConfigValue<Boolean>(false));

@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 
 public class OptiFineIntegration {
 
-    private static boolean available = false;
+    private static boolean available;
     private static Method getFpsMinMethod = null;
 
     static {
@@ -16,10 +16,6 @@ public class OptiFineIntegration {
         } catch (Exception e) {
             available = false;
         }
-    }
-
-    public static boolean isAvailable() {
-        return available;
     }
 
     public static int getMinFps() {

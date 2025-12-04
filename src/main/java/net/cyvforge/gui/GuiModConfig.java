@@ -150,6 +150,7 @@ public class GuiModConfig extends CyvGui {
         panels.add(new ConfigPanelToggle(panels, "highlightLanding", "Highlight Landing Blocks", this));
         panels.add(new ConfigPanelToggle(panels, "highlightLandingCond", "Highlight Landing Conditions", this));
         panels.add(new ConfigPanelToggle(panels, "momentumPbCancelling", "Momentum PB Cancelling", this));
+        panels.add(new ConfigPanelToggle(panels, "invfmm", "Inv Fmm", this));
         panels.add(new ConfigPanelEmptySpace(panels, this));
 
         // label specific
