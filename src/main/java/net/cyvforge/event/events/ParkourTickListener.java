@@ -639,7 +639,7 @@ public class ParkourTickListener {
         int forward() {
             int i = 0;
             if (keys[0] == true) i++;
-            if (keys[3] == true) i--;
+            if (keys[2] == true) i--;
             return i;
         }
 
