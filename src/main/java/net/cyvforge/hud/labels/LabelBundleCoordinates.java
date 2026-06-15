@@ -146,10 +146,7 @@ public class LabelBundleCoordinates extends LabelBundle {
                     yaw = (ParkourTickListener.lastTick == null) ? 0 : ParkourTickListener.formatYaw(ParkourTickListener.lastTick.f);
                 }
 
-                String f = df.format(yaw);
-                if (!CyvClientConfig.getBoolean("showFacingAxis", false)) {
-                    f += "\u00B0";
-                }
+                String f = df.format(yaw) + "\u00B0";
 
                 drawString("F: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
                 drawString(f, pos.getAbsoluteX() + 1 + font.getStringWidth("F: ")
