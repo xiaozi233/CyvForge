@@ -26,14 +26,16 @@ public class GuiHUDPositions extends CyvGui {
     protected int prevX;
     protected int prevY;
     protected final boolean fromLabels;
+    protected boolean fromPresets = false;
 
     protected boolean isResizing = false;
     private final int handleSize = 6;
 
-    public GuiHUDPositions(boolean fromLabels) {
+    public GuiHUDPositions(boolean fromLabels, boolean fromPresets) {
         super("HUD Position");
         Collection<DraggableHUDElement> registeredRenderers = HUDManager.registeredRenderers;
         this.fromLabels = fromLabels;
+        this.fromPresets = fromPresets;
 
         for (DraggableHUDElement renderer : registeredRenderers) {
             if (!renderer.isEnabled) continue;
@@ -89,8 +91,13 @@ public class GuiHUDPositions extends CyvGui {
                 entry.getKey().save(entry.getValue());
             });
 
-            if (fromLabels) Minecraft.getMinecraft().displayGuiScreen(new GuiMPK());
-            else Minecraft.getMinecraft().displayGuiScreen(null);
+            if (fromPresets) {
+                Minecraft.getMinecraft().displayGuiScreen(new GuiPresets());
+            } else if (fromLabels) {
+                Minecraft.getMinecraft().displayGuiScreen(new GuiMPK());
+            } else {
+                Minecraft.getMinecraft().displayGuiScreen(null);
+            }
             return;
         } else if (keyCode == Keyboard.KEY_UP) {
             if (selectedRenderer.isPresent()) {

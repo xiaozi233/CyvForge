@@ -32,6 +32,7 @@ public class GuiMPK extends CyvGui {
     SubButton guiEditButton;
     SubButton settingsButton;
     SubButton macroButton;
+    SubButton presetsButton;
 
     public GuiMPK() {
         super("MPK Gui");
@@ -56,6 +57,10 @@ public class GuiMPK extends CyvGui {
         this.macroButton = new SubButton("Open Macro", sr.getScaledWidth() / 2 + sizeX / 2 + 50,
                 sr.getScaledHeight() / 2 - sizeY / 2 + 40, 100, 15);
         this.macroButton.setEnabled(Minecraft.getMinecraft().isSingleplayer());
+
+        this.presetsButton = new SubButton("HUD Presets", sr.getScaledWidth() / 2 + sizeX / 2 + 50,
+                sr.getScaledHeight() / 2 - sizeY / 2 + 60, 100, 15);
+        this.presetsButton.setEnabled(true);
 
         this.updateLabels(false);
 
@@ -130,7 +135,7 @@ public class GuiMPK extends CyvGui {
         // draw side button background
         final int BUTTON_X = sr.getScaledWidth() / 2 + sizeX / 2 + 50;
         final int BUTTON_SIZE = 100;
-        final int BUTTON_COUNT = 3;
+        final int BUTTON_COUNT = 4;
         GuiUtils.drawRoundedRect(BUTTON_X - 4, sr.getScaledHeight()/2 - sizeY/2 - 4,
                 BUTTON_X + BUTTON_SIZE + 4, sr.getScaledHeight()/2 - sizeY/2 + BUTTON_COUNT * 20,
                 5, CyvForge.theme.background1);
@@ -139,6 +144,7 @@ public class GuiMPK extends CyvGui {
         this.guiEditButton.draw(mouseX, mouseY);
         this.settingsButton.draw(mouseX, mouseY);
         this.macroButton.draw(mouseX, mouseY);
+        this.presetsButton.draw(mouseX, mouseY);
 
         //draw searchbar
         ColorTheme theme = CyvForge.theme;
@@ -245,13 +251,16 @@ public class GuiMPK extends CyvGui {
 
         // check buttons
         if (this.guiEditButton.clicked(mouseX, mouseY, mouseEvent)) {
-            Minecraft.getMinecraft().displayGuiScreen(new GuiHUDPositions(true));
+            Minecraft.getMinecraft().displayGuiScreen(new GuiHUDPositions(true, false));
             return;
         } else if (this.settingsButton.clicked(mouseX, mouseY, mouseEvent)) {
             Minecraft.getMinecraft().displayGuiScreen(new GuiModConfig(true));
             return;
         } else if (this.macroButton.clicked(mouseX, mouseY, mouseEvent)) {
             Minecraft.getMinecraft().displayGuiScreen(new GuiMacro());
+            return;
+        } else if (this.presetsButton.clicked(mouseX, mouseY, mouseEvent)) {
+            Minecraft.getMinecraft().displayGuiScreen(new GuiPresets());
             return;
         }
 
@@ -334,6 +343,8 @@ public class GuiMPK extends CyvGui {
 
         public void mouseClicked(int slotIndex, int mouseX, int mouseY, int mouseEvent) {
             label.setEnabled(!label.isEnabled);
+            net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+            GuiPresets.saveCurrentLayoutToSelected();
         }
 
     }

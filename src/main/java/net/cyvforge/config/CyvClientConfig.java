@@ -48,6 +48,9 @@ public class CyvClientConfig {
         configFields.put("currentMacro", new ConfigValue<String>("macro"));
         configFields.put("smoothMacro", new ConfigValue<Boolean>(false));
 
+        //presets
+        configFields.put("selectedPreset", new ConfigValue<String>("none"));
+
         // inertia listener
         configFields.put("inertiaEnabled", new ConfigValue<Boolean>(false));
         configFields.put("inertiaTick", new ConfigValue<Integer>(4));
