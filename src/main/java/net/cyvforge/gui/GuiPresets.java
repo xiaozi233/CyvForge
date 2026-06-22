@@ -16,13 +16,20 @@ import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 import java.io.*;
 import java.util.ArrayList;
+import net.minecraft.client.gui.Gui;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.input.Mouse;
 
 public class GuiPresets extends CyvGui {
     int sizeX = 220;
-    int sizeY = 180;
+    int sizeY = 220;
     public ArrayList<PresetLine> presetLines = new ArrayList<>();
     SubButton addNewButton;
+    SubButton backBtn;
     File presetDir;
+    float scroll = 0;
+    float vScroll = 0;
+    int maxScroll = 0;
 
     public GuiPresets() {
         super("HUD Presets");
@@ -33,7 +40,10 @@ public class GuiPresets extends CyvGui {
     @Override
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
-        this.addNewButton = new SubButton("Create New Preset", this.width / 2 - 75, this.height / 2 + sizeY / 2 + 10, 150, 20);
+        int startX = this.width / 2 - sizeX / 2;
+        int startY = this.height / 2 - sizeY / 2;
+        this.backBtn = new SubButton("Back", startX, startY - 25, 40, 14);
+        this.addNewButton = new SubButton("Create New Preset", this.width / 2 - 75, startY + sizeY - 25, 150, 20);
         this.addNewButton.setEnabled(true);
         refreshPresets();
         saveCurrentLayoutToSelected();
@@ -75,41 +85,83 @@ public class GuiPresets extends CyvGui {
         int startX = this.width / 2 - sizeX / 2;
         int startY = this.height / 2 - sizeY / 2;
 
+        maxScroll = Math.max(0, (presetLines.size() * 22) - (sizeY - 70));
+
+        int bx = startX;
+        int by = startY - 25;
+        int bw = 40;
+        int bh = 14;
+        boolean backHover = mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh;
+
+        int backColor = backHover ? 0xBF333333 : 0xBF000000;
+        GuiUtils.drawRoundedRect(bx, by, bx + bw, by + bh, 5, backColor);
+        GuiUtils.drawCenteredString("Back", bx + bw / 2, by + 3, 0xFFFFFFFF, false);
+
         GuiUtils.drawRoundedRect(startX - 5, startY - 5, startX + sizeX + 5, startY + sizeY + 5, 5, CyvForge.theme.background1);
         GuiUtils.drawCenteredString("HUD Presets", this.width / 2, startY + 5, 0xFFFFFFFF, true);
         this.addNewButton.draw(mouseX, mouseY);
 
+        int factor = sr.getScaleFactor();
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(startX * factor, (height - (startY + sizeY - 30)) * factor, sizeX * factor, (sizeY - 60) * factor);
+
         String currentSelected = CyvClientConfig.getString("selectedPreset", "");
         for (int i = 0; i < presetLines.size(); i++) {
-            int yPos = startY + 30 + (i * 22);
+            int yPos = (int) (startY + 40 + (i * 22) - scroll);
             PresetLine line = presetLines.get(i);
 
             if (line.file.getName().equals(currentSelected)) {
-                GuiUtils.drawRectOutline(startX + 1, yPos - 3, startX + sizeX, yPos + 16, 0xFFFFFFFF);
+                GuiUtils.drawRectOutline(startX + 1, yPos - 4, startX + sizeX - 2, yPos + 18, 0xFFFFFFFF);
             }
             line.draw(yPos, mouseX, mouseY);
+        }
+
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+
+        if (maxScroll > 0) {
+            int barHeight = sizeY - 70;
+            int scrollHeight = Math.max(10, (int) ((float) barHeight * barHeight / (maxScroll + barHeight)));
+            int scrollPos = (int) (scroll / maxScroll * (barHeight - scrollHeight));
+
+            Gui.drawRect(startX - 3, startY + 35, startX - 1, startY + 35 + barHeight, 0x30FFFFFF);
+            Gui.drawRect(startX - 3, startY + 35 + scrollPos, startX - 1, startY + 35 + scrollPos + scrollHeight, 0xFFFFFFFF);
         }
     }
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseEvent) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseEvent);
+        int startX = this.width / 2 - sizeX / 2;
+        int startY = this.height / 2 - sizeY / 2;
+
+        if (mouseX >= startX && mouseX <= startX + 40 && mouseY >= startY - 25 && mouseY <= startY - 11) {
+            mc.displayGuiScreen(new GuiMPK());
+            return;
+        }
+
         if (this.addNewButton.clicked(mouseX, mouseY, mouseEvent)) {
             saveCurrentAsNew();
             refreshPresets();
             return;
         }
-        int startY = this.height / 2 - sizeY / 2;
+
         ArrayList<PresetLine> tempLines = new ArrayList<>(presetLines);
         for (int i = 0; i < tempLines.size(); i++) {
-            int yPos = startY + 30 + (i * 22);
-            if (tempLines.get(i).mouseClicked(yPos, mouseX, mouseY, mouseEvent)) break;
+            int yPos = (int) (startY + 40 + (i * 22) - scroll);
+
+            if (mouseY >= startY + 30 && mouseY <= startY + sizeY - 30) {
+                if (tempLines.get(i).mouseClicked(yPos, mouseX, mouseY, mouseEvent)) break;
+            }
         }
     }
 
     @Override
     public void keyTyped(char typedChar, int keyCode) throws IOException {
-        super.keyTyped(typedChar, keyCode);
+        if (keyCode == Keyboard.KEY_ESCAPE) {
+            saveCurrentLayoutToSelected();
+            mc.displayGuiScreen(new GuiMPK());
+            return;
+        }
+
         ArrayList<PresetLine> linesCopy = new ArrayList<>(presetLines);
         for (PresetLine line : linesCopy) {
             if (line.nameField.isFocused()) {
@@ -250,5 +302,20 @@ public class GuiPresets extends CyvGui {
                 }
             }
         }
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getDWheel();
+        if (wheel != 0) vScroll -= wheel * 0.08f;
+    }
+
+    @Override
+    public void updateScreen() {
+        scroll += vScroll;
+        vScroll *= 0.7f;
+        if (scroll < 0) scroll = 0;
+        if (scroll > maxScroll) scroll = maxScroll;
     }
 }

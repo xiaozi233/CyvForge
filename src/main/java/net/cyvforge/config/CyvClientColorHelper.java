@@ -13,25 +13,36 @@ public class CyvClientColorHelper {
 
     static {
         colors = new ArrayList<>();
-        colors.add(new CyvClientColor("dark_red", EnumChatFormatting.DARK_RED));
+        colors.add(new CyvClientColor("dark_red | dred", EnumChatFormatting.DARK_RED));
         colors.add(new CyvClientColor("red", EnumChatFormatting.RED));
         colors.add(new CyvClientColor("gold", EnumChatFormatting.GOLD));
         colors.add(new CyvClientColor("yellow", EnumChatFormatting.YELLOW));
-        colors.add(new CyvClientColor("dark_green", EnumChatFormatting.DARK_GREEN));
+        colors.add(new CyvClientColor("dark_green | dgreen", EnumChatFormatting.DARK_GREEN));
         colors.add(new CyvClientColor("green", EnumChatFormatting.GREEN));
         colors.add(new CyvClientColor("aqua", EnumChatFormatting.AQUA));
-        colors.add(new CyvClientColor("dark_aqua", EnumChatFormatting.DARK_AQUA));
-        colors.add(new CyvClientColor("dark_blue", EnumChatFormatting.DARK_BLUE));
+        colors.add(new CyvClientColor("dark_aqua | daqua", EnumChatFormatting.DARK_AQUA));
+        colors.add(new CyvClientColor("dark_blue | dblue", EnumChatFormatting.DARK_BLUE));
         colors.add(new CyvClientColor("blue", EnumChatFormatting.BLUE));
-        colors.add(new CyvClientColor("light_purple", EnumChatFormatting.LIGHT_PURPLE));
-        colors.add(new CyvClientColor("dark_purple", EnumChatFormatting.DARK_PURPLE));
+        colors.add(new CyvClientColor("pink", EnumChatFormatting.LIGHT_PURPLE));
+        colors.add(new CyvClientColor("purple", EnumChatFormatting.DARK_PURPLE));
         colors.add(new CyvClientColor("white", EnumChatFormatting.WHITE));
         colors.add(new CyvClientColor("gray", EnumChatFormatting.GRAY));
-        colors.add(new CyvClientColor("dark_gray", EnumChatFormatting.DARK_GRAY));
+        colors.add(new CyvClientColor("dark_gray | dgray", EnumChatFormatting.DARK_GRAY));
         colors.add(new CyvClientColor("black", EnumChatFormatting.BLACK));
 
         colorStrings = colors.stream().map(c -> c.name).toArray(String[]::new);
 
+        //aliases
+        colors.add(new CyvClientColor("dred", EnumChatFormatting.DARK_RED));
+        colors.add(new CyvClientColor("dgreen", EnumChatFormatting.DARK_GREEN));
+        colors.add(new CyvClientColor("daqua", EnumChatFormatting.DARK_AQUA));
+        colors.add(new CyvClientColor("dblue", EnumChatFormatting.DARK_BLUE));
+        colors.add(new CyvClientColor("light_purple", EnumChatFormatting.LIGHT_PURPLE));
+        colors.add(new CyvClientColor("lpurple", EnumChatFormatting.LIGHT_PURPLE));
+        colors.add(new CyvClientColor("dark_purple", EnumChatFormatting.DARK_PURPLE));
+        colors.add(new CyvClientColor("dpurple", EnumChatFormatting.DARK_PURPLE));
+        colors.add(new CyvClientColor("dgray", EnumChatFormatting.DARK_GRAY));
+        colors.add(new CyvClientColor("dpurple", EnumChatFormatting.DARK_PURPLE));
     }
 
     public static void checkColor(String c1, String c2) {
@@ -40,7 +51,12 @@ public class CyvClientColorHelper {
 
         for (CyvClientColor c : colors) {
             if (c.name.equals(c1)) color1 = c;
+            else if (c1.equals("light_purple") && c.name.equals("pink")) color1 = c;
+            else if (c1.equals("dark_purple") && c.name.equals("purple")) color1 = c;
+
             if (c.name.equals(c2)) color2 = c;
+            else if (c2.equals("light_purple") && c.name.equals("pink")) color2 = c;
+            else if (c2.equals("dark_purple") && c.name.equals("purple")) color2 = c;
         }
 
         CyvClientConfig.set("color1", color1.name);
@@ -49,7 +65,7 @@ public class CyvClientColorHelper {
 
     public static boolean setColor1(String s) {
         for (CyvClientColor c : colors) {
-            if (c.name.equals(s)) {
+            if (c.name.equalsIgnoreCase(s)) {
                 color1 = c;
                 CyvClientConfig.set("color1", color1.name);
                 return true;

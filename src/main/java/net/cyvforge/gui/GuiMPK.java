@@ -33,6 +33,7 @@ public class GuiMPK extends CyvGui {
     SubButton settingsButton;
     SubButton macroButton;
     SubButton presetsButton;
+    SubButton chatMacrosButton;
 
     public GuiMPK() {
         super("MPK Gui");
@@ -61,6 +62,10 @@ public class GuiMPK extends CyvGui {
         this.presetsButton = new SubButton("HUD Presets", sr.getScaledWidth() / 2 + sizeX / 2 + 50,
                 sr.getScaledHeight() / 2 - sizeY / 2 + 60, 100, 15);
         this.presetsButton.setEnabled(true);
+
+        this.chatMacrosButton = new SubButton("Chat Macros", sr.getScaledWidth() / 2 + sizeX / 2 + 50,
+                sr.getScaledHeight() / 2 - sizeY / 2 + 80, 100, 15);
+        this.chatMacrosButton.setEnabled(true);
 
         this.updateLabels(false);
 
@@ -135,7 +140,7 @@ public class GuiMPK extends CyvGui {
         // draw side button background
         final int BUTTON_X = sr.getScaledWidth() / 2 + sizeX / 2 + 50;
         final int BUTTON_SIZE = 100;
-        final int BUTTON_COUNT = 4;
+        final int BUTTON_COUNT = 5;
         GuiUtils.drawRoundedRect(BUTTON_X - 4, sr.getScaledHeight()/2 - sizeY/2 - 4,
                 BUTTON_X + BUTTON_SIZE + 4, sr.getScaledHeight()/2 - sizeY/2 + BUTTON_COUNT * 20,
                 5, CyvForge.theme.background1);
@@ -145,6 +150,7 @@ public class GuiMPK extends CyvGui {
         this.settingsButton.draw(mouseX, mouseY);
         this.macroButton.draw(mouseX, mouseY);
         this.presetsButton.draw(mouseX, mouseY);
+        this.chatMacrosButton.draw(mouseX, mouseY);
 
         //draw searchbar
         ColorTheme theme = CyvForge.theme;
@@ -261,6 +267,9 @@ public class GuiMPK extends CyvGui {
             return;
         } else if (this.presetsButton.clicked(mouseX, mouseY, mouseEvent)) {
             Minecraft.getMinecraft().displayGuiScreen(new GuiPresets());
+            return;
+        } else if (this.chatMacrosButton.clicked(mouseX, mouseY, mouseEvent)) {
+            Minecraft.getMinecraft().displayGuiScreen(new net.cyvforge.keybinding.ChatMacro.GuiChatMacro());
             return;
         }
 

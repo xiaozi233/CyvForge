@@ -43,6 +43,7 @@ public class CyvClientConfig {
         configFields.put("strafejamJamOnly", new ConfigValue<Boolean>(true));
         configFields.put("turnHUDAngleMin", new ConfigValue<Integer>(1));
         configFields.put("turnHUDAngleMax", new ConfigValue<Integer>(12));
+        configFields.put("splitTurningHUD", new ConfigValue<Boolean>(false));
 
         // macros
         configFields.put("currentMacro", new ConfigValue<String>("macro"));

@@ -57,8 +57,10 @@ public class CyvForge {
 
 		MinecraftForge.EVENT_BUS.register(new KeyInputHandler());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
-		CommandInitializer.register(); //register mod commands
 
+		net.cyvforge.keybinding.ChatMacro.ChatMacroManager.load();
+
+		CommandInitializer.register(); //register mod commands
 		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
 		MinecraftForge.EVENT_BUS.register(new MacroListener());
 		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());

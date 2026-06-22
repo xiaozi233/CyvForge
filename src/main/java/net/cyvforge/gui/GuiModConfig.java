@@ -163,6 +163,7 @@ public class GuiModConfig extends CyvGui {
         panels.add(new ConfigPanelToggle(panels, "strafejamJamOnly", "Strafejam only after Jam", this));
         panels.add(new ConfigPanelIntegerSlider(panels, "turnHUDAngleMin", "Turn HUD Angle Min", 1, 12, this));
         panels.add(new ConfigPanelIntegerSlider(panels, "turnHUDAngleMax", "Turn HUD Angle Max", 1, 12, this));
+        panels.add(new ConfigPanelToggle(panels, "splitTurningHUD", "Split Turning HUD", this));
 
         // macro
         panels.add(new ConfigPanelEmptySpace(panels, this));
