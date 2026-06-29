@@ -65,6 +65,8 @@ public class GuiLb extends CyvGui {
             this.landingModeButton.setText("Landing Mode: Hit");
         } else if (lb.mode.equals(LandingMode.z_neo)) {
             this.landingModeButton.setText("Landing Mode: Z Neo");
+        } else if (lb.mode.equals(LandingMode.x_neo)) {
+            this.landingModeButton.setText("Landing Mode: X Neo");
         } else {
             lb.mode = LandingMode.enter;
             this.landingModeButton.setText("Landing Mode: Enter");
@@ -87,6 +89,9 @@ public class GuiLb extends CyvGui {
                 lb.mode = LandingMode.z_neo;
                 this.landingModeButton.setText("Landing Mode: Z Neo");
             } else if (mode.equals(LandingMode.z_neo)) {
+                lb.mode = LandingMode.x_neo;
+                this.landingModeButton.setText("Landing Mode: X Neo");
+            } else if (mode.equals(LandingMode.x_neo)) {
                 lb.mode = LandingMode.enter;
                 this.landingModeButton.setText("Landing Mode: Enter");
             } else {

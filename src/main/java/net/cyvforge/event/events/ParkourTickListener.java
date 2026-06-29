@@ -208,10 +208,10 @@ public class ParkourTickListener {
                     if (vy < 0 && airtime > 1) {
                         if (landingBlock.mode.equals(LandingMode.hit) || landingBlock.mode.equals(LandingMode.enter)) {
                             LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, landingBlock, i);
+                                    lastTick.y, lastTick.z, x, z, landingBlock, i);
                         } else {
                             LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, landingBlock, i);
+                                    secondLastTick.y, secondLastTick.z, x, z, landingBlock, i);
                         }
                     }
                 }
@@ -232,10 +232,10 @@ public class ParkourTickListener {
                     if (vy < 0 && airtime > 1) {
                         if (momentumBlock.mode.equals(LandingMode.hit) || momentumBlock.mode.equals(LandingMode.enter)) {
                             LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, momentumBlock, i);
+                                    lastTick.y, lastTick.z, x, z, momentumBlock, i);
                         } else {
                             LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, momentumBlock, i);
+                                    secondLastTick.y, secondLastTick.z, x, z, momentumBlock, i);
                         }
                     }
                 }

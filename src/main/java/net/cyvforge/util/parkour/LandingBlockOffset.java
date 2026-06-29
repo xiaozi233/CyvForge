@@ -21,7 +21,7 @@ public class LandingBlockOffset {
         sendChatOffset = false;
     }
 
-    public static void check(double x, double y, double z, double lastx, double lasty, double lastz, LandingBlock b, int i) {
+    public static void check(double x, double y, double z, double lastx, double lasty, double lastz, double nextX, double nextZ, LandingBlock b, int i) {
         Double xOffset = null, zOffset = null;
         Double eventX = null, eventZ = null;
 
@@ -36,9 +36,13 @@ public class LandingBlockOffset {
             zOffset = checkZ(z, b, i);
             eventX = x;
             eventZ = z;
-        } else if (y >= b.bb[i].maxY && (b.mode.equals(LandingMode.z_neo) || b.mode.equals(LandingMode.landing))) {
+        } else if (y >= b.bb[i].maxY && (b.mode.equals(LandingMode.z_neo) || b.mode.equals(LandingMode.x_neo) || b.mode.equals(LandingMode.landing))) {
+
             xOffset = checkX(x, b, i);
             eventX = x;
+            zOffset = checkZ(z, b, i);
+            eventZ = z;
+
             if (b.mode.equals(LandingMode.z_neo)) {
                 zOffset = checkZ(lastz, b, i);
                 eventZ = lastz;
@@ -48,10 +52,10 @@ public class LandingBlockOffset {
                     zOffset = temp < zOffset ? temp : zOffset;
                     eventZ = z;
                 }
-
-            } else {
-                zOffset = checkZ(z, b, i);
-                eventZ = z;
+            }
+            else if (b.mode.equals(LandingMode.x_neo)) {
+                xOffset = checkX(nextX, b, i);
+                eventX = nextX;
             }
 
         }
