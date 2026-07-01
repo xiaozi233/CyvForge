@@ -155,8 +155,16 @@ public class GuiModConfig extends CyvGui {
 
         // label specific
         panels.add(new ConfigPanelToggle(panels, "showFacingAxis", "Show Facing Axis", this));
+        panels.add(new ConfigPanelToggle(panels, "frameBased", "Frame Based Facing", this));
+        panels.add(new ConfigPanelToggle(panels, "WADdisplay", "Last Input WAD Display ", this));
+        panels.add(new ConfigPanelToggle(panels, "simpleBlip", "Simplified Blip", this));
+        panels.add(new ConfigPanelToggle(panels, "markInSidestep", "Mark in Sidestep", this));
+        panels.add(new ConfigPanelToggle(panels, "detectWobble", "Wobble Timing", this));
+        panels.add(new ConfigPanelToggle(panels, "detectStrafejam", "Strafejam Timing", this));
+        panels.add(new ConfigPanelToggle(panels, "strafejamJamOnly", "Strafejam only after Jam", this));
         panels.add(new ConfigPanelIntegerSlider(panels, "turnHUDAngleMin", "Turn HUD Angle Min", 1, 12, this));
         panels.add(new ConfigPanelIntegerSlider(panels, "turnHUDAngleMax", "Turn HUD Angle Max", 1, 12, this));
+        panels.add(new ConfigPanelToggle(panels, "splitTurningHUD", "Split Turning HUD", this));
 
         // macro
         panels.add(new ConfigPanelEmptySpace(panels, this));
@@ -182,6 +190,8 @@ public class GuiModConfig extends CyvGui {
 
         // checkpoints
         panels.add(new ConfigPanelEmptySpace(panels, this));
+        panels.add(new ConfigPanelToggle(panels, "antiCP", "Anti-Checkpoint", this));
+        panels.add(new ConfigPanelIntegerSlider(panels, "antiCPDelay", "Anti-CP Delay (s)", 1, 10, this));
         panels.add(new ConfigPanelToggle(panels, "singleplayerCheckpointsEnabled", "Custom Checkpoints Enabled", this));
         panels.add(new ConfigPanelIntegerSlider(panels, "generatorDyeColor", "Generator Dye Color", 0, 15, this));
         panels.add(new ConfigPanelIntegerSlider(panels, "generatorItemSlot", "Generator Hotbar Slot", 0, 8, this));

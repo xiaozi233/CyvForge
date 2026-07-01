@@ -30,15 +30,28 @@ public class CyvClientConfig {
         configFields.put("highlightLandingCond", new ConfigValue<Boolean>(false));
         configFields.put("momentumPbCancelling", new ConfigValue<Boolean>(false));
         configFields.put("invfmm", new ConfigValue<Boolean>(false));
+        configFields.put("keystrokesScale", new ConfigValue<Double>(1.0));
+        configFields.put("keystrokesSize", new ConfigValue<Integer>(66));
 
         // label specific
         configFields.put("showFacingAxis", new ConfigValue<Boolean>(false));
+        configFields.put("frameBased", new ConfigValue<Boolean>(false));
+        configFields.put("WADdisplay", new ConfigValue<Boolean>(false));
+        configFields.put("simpleBlip", new ConfigValue<Boolean>(false));
+        configFields.put("markInSidestep", new ConfigValue<Boolean>(true));
+        configFields.put("detectWobble", new ConfigValue<Boolean>(false));
+        configFields.put("detectStrafejam", new ConfigValue<Boolean>(false));
+        configFields.put("strafejamJamOnly", new ConfigValue<Boolean>(true));
         configFields.put("turnHUDAngleMin", new ConfigValue<Integer>(1));
         configFields.put("turnHUDAngleMax", new ConfigValue<Integer>(12));
+        configFields.put("splitTurningHUD", new ConfigValue<Boolean>(false));
 
         // macros
         configFields.put("currentMacro", new ConfigValue<String>("macro"));
         configFields.put("smoothMacro", new ConfigValue<Boolean>(false));
+
+        //presets
+        configFields.put("selectedPreset", new ConfigValue<String>("none"));
 
         // inertia listener
         configFields.put("inertiaEnabled", new ConfigValue<Boolean>(false));
@@ -58,6 +71,8 @@ public class CyvClientConfig {
         configFields.put("positionCheckerZNeo", new ConfigValue<Boolean>(false));
 
         // checkpoints
+        configFields.put("antiCP", new ConfigValue<Boolean>(false));
+        configFields.put("antiCPDelay", new ConfigValue<Integer>(1));
         configFields.put("singleplayerCheckpointsEnabled", new ConfigValue<Boolean>(true));
         configFields.put("generatorDyeColor", new ConfigValue<Integer>(1));
         configFields.put("generatorItemSlot", new ConfigValue<Integer>(0));

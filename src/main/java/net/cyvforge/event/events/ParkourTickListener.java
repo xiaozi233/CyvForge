@@ -19,6 +19,7 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -27,6 +28,7 @@ import org.lwjgl.opengl.GL11;
 import java.text.DecimalFormat;
 
 public class ParkourTickListener {
+    public static long lastPbTimestamp = 0;
     public static int airtime = 0;
     public static PosTick lastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
     public static PosTick secondLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
@@ -61,6 +63,9 @@ public class ParkourTickListener {
 
     public static String lastTiming = "";
     public static int blips = 0;
+    public static boolean positionCheckedThisJump = false;
+    public static boolean inertiaCheckedThisJump = false;
+
     public static double lastBlipHeight = 0;
 
     public static int grinds = 0;
@@ -135,7 +140,6 @@ public class ParkourTickListener {
 
             checkInertia();
             checkPosition();
-
         }
 
         if (airtime == 1) { //jump tick
@@ -174,7 +178,6 @@ public class ParkourTickListener {
                     blips = 0;
                 }
             }
-
         }
 
         //last 45
@@ -203,7 +206,6 @@ public class ParkourTickListener {
             hf = f;
             hvx = vx;
             hvz = vz;
-
         }
 
         if (landingBlock != null) { //must be lower than the landing to check it
@@ -217,17 +219,16 @@ public class ParkourTickListener {
                     if (vy < 0 && airtime > 1) {
                         if (landingBlock.mode.equals(LandingMode.hit) || landingBlock.mode.equals(LandingMode.enter)) {
                             LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, landingBlock, i);
+                                    lastTick.y, lastTick.z, x, z, landingBlock, i);
                         } else {
                             LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, landingBlock, i);
+                                    secondLastTick.y, secondLastTick.z, x, z, landingBlock, i);
                         }
                     }
                 }
             }
 
             LandingBlockOffset.finalizePb(landingBlock);
-
         }
 
         if (momentumBlock != null) { //must be lower than the landing to check it
@@ -241,10 +242,10 @@ public class ParkourTickListener {
                     if (vy < 0 && airtime > 1) {
                         if (momentumBlock.mode.equals(LandingMode.hit) || momentumBlock.mode.equals(LandingMode.enter)) {
                             LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, momentumBlock, i);
+                                    lastTick.y, lastTick.z, x, z, momentumBlock, i);
                         } else {
                             LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, momentumBlock, i);
+                                    secondLastTick.y, secondLastTick.z, x, z, momentumBlock, i);
                         }
                     }
                 }
@@ -269,6 +270,9 @@ public class ParkourTickListener {
         if (lastTick.onGround) {
             if (airtime != 0) lastAirtime = airtime;
             airtime = 0;
+
+            positionCheckedThisJump = false;
+            inertiaCheckedThisJump = false;
         }
         else lastAirtime = airtime;
         if (lastTick.forward() != 0 || lastTick.strafe() != 0 || lastTick.keys[4] || lastTick.keys[6]){
@@ -279,7 +283,6 @@ public class ParkourTickListener {
         } else {
             lastStopTime = stopTime;
         }
-
     }
 
     private static void checkInertia() {
@@ -298,7 +301,7 @@ public class ParkourTickListener {
             else if (inertiaGroundType.equals("slime")) stored_slip = 0.8f;
             else stored_slip = 0.6f;
 
-        } else if (airtime == inertiaTick+1) {
+        } else if (airtime == inertiaTick + 1 && !inertiaCheckedThisJump) {
 
             int tick = inertiaTick;
             double min = inertiaMin;
@@ -316,8 +319,8 @@ public class ParkourTickListener {
                     CyvForge.sendChatMessage("Missed inertia at tick " + (airtime-1) + ", previous v = " + df.format(stored_v));
                 }
 
+                inertiaCheckedThisJump = true;
             }
-
         }//end checking inertia
     }
 
@@ -332,23 +335,22 @@ public class ParkourTickListener {
         double zMax = CyvClientConfig.getDouble("positionCheckerMaxZ", 10000.0);
 
         if (!toggled) return;
-        if (airtime == checkTick && !zNeo) {
+        if (airtime == checkTick && !zNeo && !positionCheckedThisJump) {
             if (!((xMin <= x && x <= xMax) || (xMax <= x && x <= xMin))) return;
             if (!((zMin <= z && z <= zMax) || (zMax <= z && z <= zMin))) return;
 
             DecimalFormat df = CyvForge.df;
-
             CyvForge.sendChatMessage("X: " + df.format(x) + ", Z: " + df.format(z));
+            positionCheckedThisJump = true;
 
-        } else if (airtime == checkTick && zNeo) {
+        } else if (airtime == checkTick && zNeo && !positionCheckedThisJump) {
             if (!((xMin <= x && x <= xMax) || (xMax <= x && x <= xMin))) return;
             if (!((zMin <= lastTick.z && lastTick.z <= zMax) || (zMax <= lastTick.z && lastTick.z <= zMin))) return;
 
             DecimalFormat df = CyvForge.df;
-
             CyvForge.sendChatMessage("X: " + df.format(x) + ", Z: " + df.format(lastTick.z));
+            positionCheckedThisJump = true;
         }
-
     }
 
     private static void calculateLastTiming() {
@@ -356,7 +358,7 @@ public class ParkourTickListener {
         GameSettings gameSettings = Minecraft.getMinecraft().gameSettings;
 
         boolean isForwardDown = gameSettings.keyBindForward.isKeyDown();
-        boolean isBackDown =gameSettings.keyBindBack.isKeyDown();
+        boolean isBackDown = gameSettings.keyBindBack.isKeyDown();
         boolean isSideKeyDown = gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown();
         boolean isAnyMoveKeyDown = isSideKeyDown || isForwardDown || isBackDown;
 
@@ -366,17 +368,6 @@ public class ParkourTickListener {
             lastMoveTime++;
             lastGroundMoveTime++;
             hasActed = true;
-            /*
-            if (lastMoveTime == 0) {
-                earliestMoveTimestamp = 0;
-                if (gameSettings.keyBindForward.isKeyDown()) earliestMoveTimestamp = gameSettings.keyBindForward.lastPressTime;
-                if (gameSettings.keyBindBack.isKeyDown() && (gameSettings.keyBindBack.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindBack.lastPressTime;
-                if (gameSettings.keyBindLeft.isKeyDown() && (gameSettings.keyBindLeft.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindLeft.lastPressTime;
-                if (gameSettings.keyBindRight.isKeyDown() && (gameSettings.keyBindRight.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindRight.lastPressTime;
-
-            }
-            
-             */
 
             //already jumped, started moving
             if (lastJumpTime > -1 && lastMoveTime == 0 && airtime != 0 && !(vy == 0 && lastTick.onGround)
@@ -386,11 +377,6 @@ public class ParkourTickListener {
                 if ((lastJumpTime+1) == 1) lastTiming = "Max " + lastTiming;
                 else lastTiming = lastTiming + ' ' + (lastJumpTime+1) + " ticks";
                 locked = true;
-
-                /*
-                if (showMS && Math.abs((earliestMoveTimestamp - gameSettings.keyBindJump.lastPressTime) / 1000000) < 10000)
-                    lastTiming += " (" + ((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) + " ms)";
-                */
             }
 
             if (lastTick.onGround && !secondLastTick.onGround) { //landed
@@ -414,23 +400,23 @@ public class ParkourTickListener {
                 if (isSideKeyDown && !(isForwardDown || isBackDown)) {
                     isPotentialMark = true;
                     isPotentialStrafejam = false;
-                    lastTiming = "Sidejam"; // 正确的名称
+                    lastTiming = "Sidejam";
                 }
-                // 意图 2: Strafe Jam (W+A/D Jam) -> 这是计时松开A/D的跳法
-                else if (isSideKeyDown) {
+                // 意图 2: Strafe Jam (W+A/D Jam) -> 这是计时松开A/D的跳法 (带开关限制)
+                else if (isSideKeyDown && CyvClientConfig.getBoolean("detectStrafejam", false)) {
                     isPotentialStrafejam = true;
                     isPotentialMark = false;
-                    lastTiming = "Strafe Jam"; // 正确的名称
-                    if (gameSettings.keyBindSprint.isKeyDown()){
+                    lastTiming = "Strafe Jam";
+                    if (gameSettings.keyBindSprint.isKeyDown()) {
                         locked = true;
                     }
                 }
-                // 意图 3: 普通 Jam -> 只按了前进键
+                // 意图 3: 普通 Jam -> 只按了前进键 或 关掉了 StrafeJam 检测
                 else {
                     isPotentialMark = false;
                     isPotentialStrafejam = false;
                     lastTiming = "Jam";
-                    if (gameSettings.keyBindSprint.isKeyDown()){
+                    if (gameSettings.keyBindSprint.isKeyDown()) {
                         locked = true;
                     }
                 }
@@ -448,10 +434,17 @@ public class ParkourTickListener {
 
             // 1. MARK 触发 (来自 Sidejam 后按 W)
             if (isPotentialMark && !locked && gameSettings.keyBindForward.isKeyDown()) {
-                if (lastJumpTime == 1) {
-                    lastTiming = "Max Mark";
+                boolean markInSidestep = CyvClientConfig.getBoolean("markInSidestep", true);
+
+                if (markInSidestep) {
+                    sidestep = 2;
+                    sidestepTime = airtime;
                 } else {
-                    lastTiming = "Mark " + lastJumpTime + " ticks";
+                    if (lastJumpTime == 1) {
+                        lastTiming = "Max Mark";
+                    } else {
+                        lastTiming = "Mark " + lastJumpTime + " ticks";
+                    }
                 }
                 locked = true;
                 isPotentialMark = false;
@@ -470,7 +463,7 @@ public class ParkourTickListener {
         } else { // 既不跳跃也不在空中 (可能已落地)
             lastJumpTime = -1;
             if (isPotentialMark) isPotentialMark = false;
-            if (isPotentialStrafejam) isPotentialStrafejam = false; // 更新变量名
+            if (isPotentialStrafejam) isPotentialStrafejam = false;
         }
 
         //sneaking
@@ -500,13 +493,30 @@ public class ParkourTickListener {
                 if (lastJumpTime >= 1) {
                     if (lastJumpTime == 1) lastTiming = "Max Strafe FMM";
                     else lastTiming = "Strafe FMM " + lastJumpTime + " ticks";
-                    locked = true; // 锁定状态，覆盖 Strafe Jam 的显示
-                    isPotentialStrafejam = false; // 消耗掉状态
+                    locked = true;
+                    isPotentialStrafejam = false;
                 }
             }
 
         } else {
             lastSprintTime = -1;
+        }
+
+        //wobble (From left file)
+        if (CyvClientConfig.getBoolean("detectWobble", false)) {
+            if (secondLastTick != null && lastTick != null && secondLastTick.keys != null && lastTick.keys != null) {
+                String wobbledKey = "";
+
+                // 0=W, 1=A, 2=S, 3=D
+                if (gameSettings.keyBindForward.isKeyDown() && !lastTick.keys[0] && secondLastTick.keys[0]) wobbledKey += "W";
+                if (gameSettings.keyBindLeft.isKeyDown() && !lastTick.keys[1] && secondLastTick.keys[1]) wobbledKey += "A";
+                if (gameSettings.keyBindBack.isKeyDown() && !lastTick.keys[2] && secondLastTick.keys[2]) wobbledKey += "S";
+                if (gameSettings.keyBindRight.isKeyDown() && !lastTick.keys[3] && secondLastTick.keys[3]) wobbledKey += "D";
+
+                if (!wobbledKey.isEmpty()) {
+                    lastTiming = "Wobble (" + wobbledKey + ")";
+                }
+            }
         }
 
         //reset
@@ -566,7 +576,6 @@ public class ParkourTickListener {
     public static class PosTick {
 
         public PosTick(EntityPlayerSP player, double vx, double vy, double vz, int airtime, boolean[] keys) {
-
             this.x = player.posX;
             this.y = player.posY;
             this.z = player.posZ;
@@ -609,7 +618,6 @@ public class ParkourTickListener {
             this.keys = keys;
         }
 
-
         public boolean[] keys;
         public double x;
         public double y;
@@ -639,14 +647,16 @@ public class ParkourTickListener {
         int forward() {
             int i = 0;
             if (keys[0] == true) i++;
-            if (keys[2] == true) i--;
+            if (keys[2] == true) i--; // Fixed: Was keys[3] (Right) instead of keys[2] (Back)
             return i;
         }
-
     }
 
     public static float formatYaw(float yaw) {
-        return (yaw + 180) % 360 - 180;
+        float facing = yaw % 360;
+        if (facing > 180) facing -= 360;
+        else if (facing < -180) facing += 360;
+        return facing;
     }
 
     private void doCheckpoints() {
@@ -687,7 +697,6 @@ public class ParkourTickListener {
             }
 
         } catch (Exception ignored) {}
-
     }
 
     @SubscribeEvent
@@ -740,5 +749,26 @@ public class ParkourTickListener {
 
         GlStateManager.enableDepth();
 
+    }
+
+    public static void triggerAntiCP() {
+        if (CyvClientConfig.getBoolean("antiCP", false)) {
+            lastPbTimestamp = System.currentTimeMillis();
+        }
+    }
+
+    @SubscribeEvent
+    public void onMouse(MouseEvent event) {
+        if (event.button == 1 && event.buttonstate) {
+            if (CyvClientConfig.getBoolean("antiCP", false)) {
+                long delayMs = CyvClientConfig.getInt("antiCPDelay", 1) * 1000L;
+                long timePassed = System.currentTimeMillis() - lastPbTimestamp;
+
+                if (timePassed < delayMs) {
+                    event.setCanceled(true);
+                    CyvForge.sendChatMessage("§cYou have AntiCP enabled, right-click cancelled.");
+                }
+            }
+        }
     }
 }
