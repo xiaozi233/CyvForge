@@ -55,7 +55,7 @@ public class CommandMacro extends CyvCommand {
         }
     }
 
-    void addToArray(boolean w, boolean a, boolean s, boolean d, boolean space, boolean sprint, boolean sneak, float yaw, float pitch) {
+    void addToArray(boolean w, boolean a, boolean s, boolean d, boolean space, boolean sprint, boolean sneak, boolean rmb,  float yaw, float pitch) {
         ArrayList<String> params = new ArrayList<String>();
 
         params.add(w+"");
@@ -65,6 +65,7 @@ public class CommandMacro extends CyvCommand {
         params.add(space+"");
         params.add(sprint+"");
         params.add(sneak+"");
+        params.add(rmb+"");
         params.add(yaw+"");
         params.add(pitch+"");
 

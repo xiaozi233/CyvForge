@@ -33,6 +33,8 @@ public class ParkourTickListener {
     public static PosTick lastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
     public static PosTick secondLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
     public static PosTick thirdLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
+    public static boolean pendingWaterCheck = false;
+    public static int waterDetectionLockout = 0;
 
     public static int lastAirtime;
     public static double x = 0, y = 0, z = 0; //coords
@@ -108,6 +110,8 @@ public class ParkourTickListener {
 
         calculateLastTiming();
         doCheckpoints();
+
+        if (waterDetectionLockout > 0) waterDetectionLockout--;
 
         if (lastTick != null) {
             if ((!lastTick.onGround || !mcPlayer.onGround) && !mcPlayer.capabilities.isFlying) airtime++;
@@ -198,50 +202,105 @@ public class ParkourTickListener {
         }
 
         if (landingBlock != null) { //must be lower than the landing to check it
-            LandingBlockOffset.refreshPb();
 
-            for (int i=0; i<landingBlock.bb.length; i++) {
-                if ((landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (y > landingBlock.bb[i].minY)) ||
-                        !landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (lastTick.y > landingBlock.bb[i].maxY)) {
-                    //check the previous ticks
+            if (landingBlock.targetTick != -1) {
+                if (airtime == landingBlock.targetTick && !positionCheckedThisJump) {
+                    LandingBlockOffset.refreshPb();
 
-                    if (vy < 0 && airtime > 1) {
-                        if (landingBlock.mode.equals(LandingMode.hit) || landingBlock.mode.equals(LandingMode.enter)) {
-                            LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, x, z, landingBlock, i);
-                        } else {
-                            LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, x, z, landingBlock, i);
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, landingBlock, 0);
+
+                    LandingBlockOffset.finalizePb(landingBlock);
+                    positionCheckedThisJump = true;
+                }
+            } else if (landingBlock.isLiquid) {
+                double d = 0.7;
+                double bottomOffset = landingBlock.liquidBottomOffset;
+                boolean inZone = (x >= landingBlock.pos.getX() - d && x <= landingBlock.pos.getX() + 1 + d) &&
+                        (y >= landingBlock.pos.getY() - d - bottomOffset && y <= landingBlock.pos.getY() + 1 + d) &&
+                        (z >= landingBlock.pos.getZ() - d && z <= landingBlock.pos.getZ() + 1 + d);
+
+                if (inZone && !mcPlayer.onGround && !positionCheckedThisJump && waterDetectionLockout == 0) {
+                    LandingBlockOffset.refreshPb();
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, landingBlock, 0);
+
+                        LandingBlockOffset.finalizePb(landingBlock);
+                        if (landingBlock.lastPb != null && landingBlock.lastPb >= 0) {
+                            positionCheckedThisJump = true;
+                        }
+                }
+            } else {
+                LandingBlockOffset.refreshPb();
+
+                for (int i=0; i<landingBlock.bb.length; i++) {
+                    if ((landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (y > landingBlock.bb[i].minY)) ||
+                            !landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (lastTick.y > landingBlock.bb[i].maxY)) {
+                        //check the previous ticks
+
+                        if (vy < 0 && airtime > 1) {
+                            if (landingBlock.mode.equals(LandingMode.hit) || landingBlock.mode.equals(LandingMode.enter)) {
+                                LandingBlockOffset.check(x, y, z, lastTick.x,
+                                        lastTick.y, lastTick.z, x, y, z, landingBlock, i);
+                            } else {
+                                LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
+                                        secondLastTick.y, secondLastTick.z, x, y, z, landingBlock, i);
+                            }
                         }
                     }
                 }
+
+                LandingBlockOffset.finalizePb(landingBlock);
             }
-
-            LandingBlockOffset.finalizePb(landingBlock);
-
         }
 
         if (momentumBlock != null) { //must be lower than the landing to check it
-            LandingBlockOffset.refreshPb();
 
-            for (int i=0; i<momentumBlock.bb.length; i++) {
-                if ((momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (y > momentumBlock.bb[i].minY)) ||
-                        !momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (lastTick.y > momentumBlock.bb[i].maxY)) {
-                    //check the previous ticks
+            if (momentumBlock.targetTick != -1) {
+                if (airtime == momentumBlock.targetTick && !positionCheckedThisJump) {
+                    LandingBlockOffset.refreshPb();
 
-                    if (vy < 0 && airtime > 1) {
-                        if (momentumBlock.mode.equals(LandingMode.hit) || momentumBlock.mode.equals(LandingMode.enter)) {
-                            LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, x, z, momentumBlock, i);
-                        } else {
-                            LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, x, z, momentumBlock, i);
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, momentumBlock, 0);
+
+                    LandingBlockOffset.finalizePb(momentumBlock);
+                    positionCheckedThisJump = true;
+                }
+            } else if (momentumBlock.isLiquid) {
+                double d = 0.7;
+                double bottomOffset = momentumBlock.liquidBottomOffset;
+                boolean inZone = (x >= momentumBlock.pos.getX() - d && x <= momentumBlock.pos.getX() + 1 + d) &&
+                        (y >= momentumBlock.pos.getY() - d - bottomOffset  && y <= momentumBlock.pos.getY() + 1 + d) &&
+                        (z >= momentumBlock.pos.getZ() - d && z <= momentumBlock.pos.getZ() + 1 + d);
+
+                if (inZone && !mcPlayer.onGround  && !positionCheckedThisJump && waterDetectionLockout == 0) {
+                    LandingBlockOffset.refreshPb();
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, momentumBlock, 0);
+
+                        LandingBlockOffset.finalizePb(momentumBlock);
+                        if (momentumBlock.lastPb != null && momentumBlock.lastPb >= 0) {
+                            positionCheckedThisJump = true;
+                        }
+                }
+            } else {
+                LandingBlockOffset.refreshPb();
+
+                for (int i=0; i<momentumBlock.bb.length; i++) {
+                    if ((momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (y > momentumBlock.bb[i].minY)) ||
+                            !momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (lastTick.y > momentumBlock.bb[i].maxY)) {
+                        //check the previous ticks
+
+                        if (vy < 0 && airtime > 1) {
+                            if (momentumBlock.mode.equals(LandingMode.hit) || momentumBlock.mode.equals(LandingMode.enter)) {
+                                LandingBlockOffset.check(x, y, z, lastTick.x,
+                                        lastTick.y, lastTick.z, x, y, z, momentumBlock, i);
+                            } else {
+                                LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
+                                        secondLastTick.y, secondLastTick.z, x, y, z, momentumBlock, i);
+                            }
                         }
                     }
                 }
-            }
 
-            LandingBlockOffset.finalizePb(momentumBlock);
+                LandingBlockOffset.finalizePb(momentumBlock);
+            }
         }
 
         boolean[] keys = new boolean[] {gameSettings.keyBindForward.isKeyDown(),
@@ -263,6 +322,7 @@ public class ParkourTickListener {
 
             positionCheckedThisJump = false;
             inertiaCheckedThisJump = false;
+            pendingWaterCheck = false;
         }
         else lastAirtime = airtime;
 
@@ -760,6 +820,13 @@ public class ParkourTickListener {
     @SubscribeEvent
     public void onMouse(MouseEvent event) {
         if (event.button == 1 && event.buttonstate) {
+
+            positionCheckedThisJump = false;
+            pendingWaterCheck = false;
+            inertiaCheckedThisJump = false;
+
+            waterDetectionLockout = 10;
+
             if (CyvClientConfig.getBoolean("antiCP", false)) {
 
                 long delayMs = CyvClientConfig.getInt("antiCPDelay", 1) * 1000L;

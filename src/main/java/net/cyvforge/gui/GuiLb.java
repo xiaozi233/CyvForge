@@ -8,6 +8,8 @@ import net.cyvforge.util.parkour.LandingAxis;
 import net.cyvforge.util.parkour.LandingBlock;
 import net.cyvforge.util.parkour.LandingMode;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiTextField;
+import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 
@@ -20,6 +22,7 @@ public class GuiLb extends CyvGui {
     SubButton calculateWalls;
     SubButton resetWalls;
     SubButton neoAndBlock;
+    GuiTextField targetTickField;
 
     public GuiLb(LandingBlock b) {
         super("Landing Block GUI");
@@ -34,6 +37,8 @@ public class GuiLb extends CyvGui {
             mc.displayGuiScreen(null);
         }
 
+        Keyboard.enableRepeatEvents(true);
+
         // init buttons
         this.landingModeButton = new SubButton("Landing Mode: " + lb.mode.toString(), this.width - 160, 10, 150, 20);
         this.axisButton = new SubButton( "Axis: " + lb.axis.toString(), this.width - 160, 35, 150, 20);
@@ -41,7 +46,15 @@ public class GuiLb extends CyvGui {
         this.condVisibleButton = new SubButton( "Cond Visible: " + CyvClientConfig.getBoolean("highlightLandingCond", false), this.width - 160, 85, 150, 20);
         this.calculateWalls = new SubButton("Calculate Walls", this.width - 160, 110, 150, 20);
         this.resetWalls = new SubButton("Reset Walls", this.width - 160, 135, 150, 20);
-        this.neoAndBlock = new SubButton("Neo & Landing: " + lb.neoAndNormal, this.width - 160, 160, 150, 20);
+
+        int labelWidth = fontRendererObj.getStringWidth("Target Tick: ");
+        this.targetTickField = new GuiTextField(9, fontRendererObj, this.width - 160 + 8 + labelWidth, 166, 60, 12);
+        this.targetTickField.setMaxStringLength(2);
+        this.targetTickField.setText(lb.targetTick == -1 ? "" : String.valueOf(lb.targetTick));
+        this.targetTickField.setEnableBackgroundDrawing(false);
+        this.targetTickField.setVisible(true);
+
+        this.neoAndBlock = new SubButton("Neo & Landing: " + lb.neoAndNormal, this.width - 160, 185, 150, 20);
 
         this.landingModeButton.setEnabled(true);
         this.axisButton.setEnabled(true);
@@ -73,12 +86,38 @@ public class GuiLb extends CyvGui {
         }
 
         this.neoAndBlock.setEnabled(lb.mode == LandingMode.z_neo);
+    }
 
+    @Override
+    public void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (this.targetTickField.isFocused()) {
+            if (Character.isDigit(typedChar) || keyCode == 14 || keyCode == 211 || keyCode == 203 || keyCode == 205) {
+                this.targetTickField.textboxKeyTyped(typedChar, keyCode);
+
+                try {
+                    String text = targetTickField.getText();
+                    lb.targetTick = text.isEmpty() ? -1 : Integer.parseInt(text);
+                } catch (Exception ignored) {}
+            }
+
+            if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_ESCAPE) {
+                targetTickField.setFocused(false);
+            }
+            return;
+        }
+
+        if (keyCode == Keyboard.KEY_ESCAPE) mc.displayGuiScreen(null);
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseEvent) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseEvent);
+
+        if (mouseX >= this.width - 160 && mouseX <= this.width - 160 + 150 && mouseY >= 160 && mouseY <= 180) {
+            this.targetTickField.setFocused(true);
+        } else {
+            this.targetTickField.setFocused(false);
+        }
 
         if (this.landingModeButton.clicked(mouseX, mouseY, mouseEvent)) {
             LandingMode mode = lb.mode;
@@ -130,15 +169,8 @@ public class GuiLb extends CyvGui {
             return;
         }
 
-        if (this.calculateWalls.clicked(mouseX, mouseY, mouseEvent)) {
-            lb.calculateWalls();
-            return;
-        }
-
-        if (this.resetWalls.clicked(mouseX, mouseY, mouseEvent)) {
-            lb.resetWalls();
-            return;
-        }
+        if (this.calculateWalls.clicked(mouseX, mouseY, mouseEvent)) { lb.calculateWalls(); return; }
+        if (this.resetWalls.clicked(mouseX, mouseY, mouseEvent)) { lb.resetWalls(); return; }
 
         if (this.neoAndBlock.clicked(mouseX, mouseY, mouseEvent)){
             lb.neoAndNormal = !lb.neoAndNormal;
@@ -153,10 +185,14 @@ public class GuiLb extends CyvGui {
         // draw background
         final int BUTTON_X = this.width - 160;
         final int BUTTON_SIZE = 150;
-        final int BUTTON_COUNT = 7;
+        final int BUTTON_COUNT = 8;
         GuiUtils.drawRoundedRect(BUTTON_X - 4, 6,
                 BUTTON_X + BUTTON_SIZE + 4, 10 + BUTTON_COUNT * 25,
                 5, CyvForge.theme.background1);
+
+        int fieldBg = targetTickField.isFocused() ? 0x80555555 : CyvForge.theme.shade2;
+        GuiUtils.drawRoundedRect(BUTTON_X, 160, BUTTON_X + BUTTON_SIZE, 180, 5, fieldBg);
+        GuiUtils.drawString("Target Tick: ", BUTTON_X + 8, 166, 0xFFFFFFFF, true);
 
         // draw buttons
         this.landingModeButton.draw(mouseX, mouseY);
@@ -165,12 +201,18 @@ public class GuiLb extends CyvGui {
         this.condVisibleButton.draw(mouseX, mouseY);
         this.calculateWalls.draw(mouseX, mouseY);
         this.resetWalls.draw(mouseX, mouseY);
+        this.targetTickField.drawTextBox();
         this.neoAndBlock.draw(mouseX, mouseY);
     }
 
     @Override
     public void updateScreen() {
         if (lb == null) mc.displayGuiScreen(null);
+        if (this.targetTickField != null) this.targetTickField.updateCursorCounter();
     }
 
+    @Override
+    public void onGuiClosed() {
+        Keyboard.enableRepeatEvents(false);
+    }
 }

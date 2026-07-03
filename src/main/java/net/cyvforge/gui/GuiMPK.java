@@ -3,6 +3,7 @@ package net.cyvforge.gui;
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.ColorTheme;
 import net.cyvforge.event.ConfigLoader;
+import net.cyvforge.event.events.GuiHandler;
 import net.cyvforge.hud.HUDManager;
 import net.cyvforge.hud.structure.DraggableHUDElement;
 import net.cyvforge.util.defaults.CyvGui;
@@ -221,12 +222,14 @@ public class GuiMPK extends CyvGui {
 
     @Override
     public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
+        int eventDWheel = GuiHandler.scrollBuffer;
+        GuiHandler.scrollBuffer = 0;
 
-        int eventDWheel = Mouse.getDWheel();
-        if ((!scrollClicked || !Mouse.isButtonDown(0)) && eventDWheel != 0) {
-            vScroll -= eventDWheel * 0.03;
+        if (eventDWheel != 0 && (!scrollClicked || !org.lwjgl.input.Mouse.isButtonDown(0))) {
+            vScroll -= eventDWheel * 0.05;
         }
+
+        super.handleMouseInput();
     }
 
     @Override

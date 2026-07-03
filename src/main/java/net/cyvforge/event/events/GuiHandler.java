@@ -1,17 +1,26 @@
 package net.cyvforge.event.events;
 
+
+import net.cyvforge.config.CyvClientConfig;
 import net.cyvforge.keybinding.ChatMacro.ChatMacro;
 import net.cyvforge.keybinding.ChatMacro.ChatMacroManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import java.lang.reflect.Field;
+
 
 //This class is used to handle GUIs for CyvFabric
 public class GuiHandler {
+    public static int scrollBuffer = 0;
+    public static int latestDWheel = 0;
     private static GuiScreen screenAwaiting; //screen which will be shown next tick
 
     public static void setScreen(GuiScreen screen) {
@@ -25,6 +34,39 @@ public class GuiHandler {
         if (screenAwaiting != null) {
             Minecraft.getMinecraft().displayGuiScreen(screenAwaiting); //set the screen
             screenAwaiting = null; //now that no screen is awaiting, clear it
+        }
+    }
+
+    @SubscribeEvent
+    public void onGuiKey(GuiScreenEvent.KeyboardInputEvent.Pre event) {
+        if (!(event.gui instanceof GuiChat)) return;
+
+        if (Keyboard.getEventKeyState() && (Keyboard.getEventKey() == Keyboard.KEY_RETURN || Keyboard.getEventKey() == Keyboard.KEY_NUMPADENTER)) {
+            try {
+                GuiChat chatGui = (GuiChat) event.gui;
+
+                Field field = GuiChat.class.getDeclaredField("inputField");
+                field.setAccessible(true);
+                GuiTextField inputField = (GuiTextField) field.get(chatGui);
+
+                String msg = inputField.getText();
+
+                if (!msg.startsWith("/")) {
+                    String lower = msg.toLowerCase();
+                    if (lower.startsWith("mpk") || lower.startsWith("cyv") || lower.startsWith("mm")) {
+
+                        Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(msg);
+                        event.setCanceled(true);
+
+                        Minecraft.getMinecraft().displayGuiScreen(null);
+
+                        if (ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, "/" + msg) == 0) {
+                            Minecraft.getMinecraft().thePlayer.sendChatMessage("/" + msg);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -67,6 +109,14 @@ public class GuiHandler {
             net.minecraftforge.client.ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, cmd);
         } else {
             Minecraft.getMinecraft().thePlayer.sendChatMessage(cmd);
+        }
+    }
+
+    @SubscribeEvent
+    public void onMouseInput(net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent.Pre event) {
+        int d = org.lwjgl.input.Mouse.getEventDWheel();
+        if (d != 0) {
+            scrollBuffer += d;
         }
     }
 }
