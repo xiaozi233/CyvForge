@@ -23,6 +23,9 @@ public class LandingBlock {
     public LandingAxis axis;
     public boolean isBox;
     public boolean neoAndNormal;
+    public boolean isLiquid = false;
+    public double liquidBottomOffset = 0;
+    public int targetTick = -1;
 
     public Double pb;
     public Double pbX;
@@ -73,6 +76,31 @@ public class LandingBlock {
 
         IBlockState blockState = world.getBlockState(pos);
         Block block = blockState.getBlock();
+
+        if (block instanceof net.minecraft.block.BlockLiquid) {
+            this.isLiquid = true;
+            double shrink = 0.0;
+            double bottomOffset = 0.0;
+
+            if (block.getMaterial() == net.minecraft.block.material.Material.water) { //water
+                shrink = 0.001;
+                bottomOffset = 0.399;
+            }
+            else if (block.getMaterial() == net.minecraft.block.material.Material.lava) { //lava
+                shrink = 0.1;
+                bottomOffset = 0.4;
+            }
+
+            this.liquidBottomOffset = bottomOffset;
+
+            this.bb = new AxisAlignedBB[] {
+                    new AxisAlignedBB(
+                            pos.getX() + shrink, pos.getY() - bottomOffset, pos.getZ() + shrink,
+                            pos.getX() + 1 - shrink, pos.getY() + 1, pos.getZ() + 1 - shrink
+                    )
+            };
+            return;
+        }
 
         //THIS IS TEMPORARY. I will find a better solution in the future
         if (isBox && (block instanceof BlockLadder || block instanceof BlockVine || block instanceof BlockSlime)) {

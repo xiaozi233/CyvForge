@@ -33,6 +33,8 @@ public class ParkourTickListener {
     public static PosTick lastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
     public static PosTick secondLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
     public static PosTick thirdLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
+    public static boolean pendingWaterCheck = false;
+    public static int waterDetectionLockout = 0;
 
     public static int lastAirtime;
     public static double x = 0, y = 0, z = 0; //coords
@@ -115,6 +117,8 @@ public class ParkourTickListener {
         calculateLastTiming();
         doCheckpoints();
 
+        if (waterDetectionLockout > 0) waterDetectionLockout--;
+
         if (lastTick != null) {
             if ((!lastTick.onGround || !mcPlayer.onGround) && !mcPlayer.capabilities.isFlying) airtime++;
             if (    mcPlayer.moveForward == 0
@@ -140,6 +144,7 @@ public class ParkourTickListener {
 
             checkInertia();
             checkPosition();
+
         }
 
         if (airtime == 1) { //jump tick
@@ -178,6 +183,7 @@ public class ParkourTickListener {
                     blips = 0;
                 }
             }
+
         }
 
         //last 45
@@ -206,52 +212,109 @@ public class ParkourTickListener {
             hf = f;
             hvx = vx;
             hvz = vz;
+
         }
 
         if (landingBlock != null) { //must be lower than the landing to check it
-            LandingBlockOffset.refreshPb();
 
-            for (int i=0; i<landingBlock.bb.length; i++) {
-                if ((landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (y > landingBlock.bb[i].minY)) ||
-                        !landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (lastTick.y > landingBlock.bb[i].maxY)) {
-                    //check the previous ticks
+            if (landingBlock.targetTick != -1) {
+                if (airtime == landingBlock.targetTick && !positionCheckedThisJump) {
+                    LandingBlockOffset.refreshPb();
 
-                    if (vy < 0 && airtime > 1) {
-                        if (landingBlock.mode.equals(LandingMode.hit) || landingBlock.mode.equals(LandingMode.enter)) {
-                            LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, x, z, landingBlock, i);
-                        } else {
-                            LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, x, z, landingBlock, i);
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, landingBlock, 0);
+
+                    LandingBlockOffset.finalizePb(landingBlock);
+                    positionCheckedThisJump = true;
+                }
+            } else if (landingBlock.isLiquid) {
+                double d = 0.7;
+                double bottomOffset = landingBlock.liquidBottomOffset;
+                boolean inZone = (x >= landingBlock.pos.getX() - d && x <= landingBlock.pos.getX() + 1 + d) &&
+                        (y >= landingBlock.pos.getY() - d - bottomOffset && y <= landingBlock.pos.getY() + 1 + d) &&
+                        (z >= landingBlock.pos.getZ() - d && z <= landingBlock.pos.getZ() + 1 + d);
+
+                if (inZone && !mcPlayer.onGround && !positionCheckedThisJump && waterDetectionLockout == 0) {
+                    LandingBlockOffset.refreshPb();
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, landingBlock, 0);
+
+                        LandingBlockOffset.finalizePb(landingBlock);
+                        if (landingBlock.lastPb != null && landingBlock.lastPb >= 0) {
+                            positionCheckedThisJump = true;
+                        }
+                }
+            } else {
+                LandingBlockOffset.refreshPb();
+
+                for (int i=0; i<landingBlock.bb.length; i++) {
+                    if ((landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (y > landingBlock.bb[i].minY)) ||
+                            !landingBlock.mode.equals(LandingMode.enter) && y <= landingBlock.bb[i].maxY && (lastTick.y > landingBlock.bb[i].maxY)) {
+                        //check the previous ticks
+
+                        if (vy < 0 && airtime > 1) {
+                            if (landingBlock.mode.equals(LandingMode.hit) || landingBlock.mode.equals(LandingMode.enter)) {
+                                LandingBlockOffset.check(x, y, z, lastTick.x,
+                                        lastTick.y, lastTick.z, x, y, z, landingBlock, i);
+                            } else {
+                                LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
+                                        secondLastTick.y, secondLastTick.z, x, y, z, landingBlock, i);
+                            }
                         }
                     }
                 }
-            }
 
-            LandingBlockOffset.finalizePb(landingBlock);
+                LandingBlockOffset.finalizePb(landingBlock);
+            }
         }
 
         if (momentumBlock != null) { //must be lower than the landing to check it
-            LandingBlockOffset.refreshPb();
 
-            for (int i=0; i<momentumBlock.bb.length; i++) {
-                if ((momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (y > momentumBlock.bb[i].minY)) ||
-                        !momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (lastTick.y > momentumBlock.bb[i].maxY)) {
-                    //check the previous ticks
+            if (momentumBlock.targetTick != -1) {
+                if (airtime == momentumBlock.targetTick && !positionCheckedThisJump) {
+                    LandingBlockOffset.refreshPb();
 
-                    if (vy < 0 && airtime > 1) {
-                        if (momentumBlock.mode.equals(LandingMode.hit) || momentumBlock.mode.equals(LandingMode.enter)) {
-                            LandingBlockOffset.check(x, y, z, lastTick.x,
-                                    lastTick.y, lastTick.z, x, z, momentumBlock, i);
-                        } else {
-                            LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
-                                    secondLastTick.y, secondLastTick.z, x, z, momentumBlock, i);
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, momentumBlock, 0);
+
+                    LandingBlockOffset.finalizePb(momentumBlock);
+                    positionCheckedThisJump = true;
+                }
+            } else if (momentumBlock.isLiquid) {
+                double d = 0.7;
+                double bottomOffset = momentumBlock.liquidBottomOffset;
+                boolean inZone = (x >= momentumBlock.pos.getX() - d && x <= momentumBlock.pos.getX() + 1 + d) &&
+                        (y >= momentumBlock.pos.getY() - d - bottomOffset  && y <= momentumBlock.pos.getY() + 1 + d) &&
+                        (z >= momentumBlock.pos.getZ() - d && z <= momentumBlock.pos.getZ() + 1 + d);
+
+                if (inZone && !mcPlayer.onGround  && !positionCheckedThisJump && waterDetectionLockout == 0) {
+                    LandingBlockOffset.refreshPb();
+                    LandingBlockOffset.check(x, y, z, x + vx, y + vy, z + vz, lastTick.x, lastTick.y, lastTick.z, momentumBlock, 0);
+
+                        LandingBlockOffset.finalizePb(momentumBlock);
+                        if (momentumBlock.lastPb != null && momentumBlock.lastPb >= 0) {
+                            positionCheckedThisJump = true;
+                        }
+                }
+            } else {
+                LandingBlockOffset.refreshPb();
+
+                for (int i=0; i<momentumBlock.bb.length; i++) {
+                    if ((momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (y > momentumBlock.bb[i].minY)) ||
+                            !momentumBlock.mode.equals(LandingMode.enter) && y <= momentumBlock.bb[i].maxY && (lastTick.y > momentumBlock.bb[i].maxY)) {
+                        //check the previous ticks
+
+                        if (vy < 0 && airtime > 1) {
+                            if (momentumBlock.mode.equals(LandingMode.hit) || momentumBlock.mode.equals(LandingMode.enter)) {
+                                LandingBlockOffset.check(x, y, z, lastTick.x,
+                                        lastTick.y, lastTick.z, x, y, z, momentumBlock, i);
+                            } else {
+                                LandingBlockOffset.check(lastTick.x, lastTick.y, lastTick.z, secondLastTick.x,
+                                        secondLastTick.y, secondLastTick.z, x, y, z, momentumBlock, i);
+                            }
                         }
                     }
                 }
-            }
 
-            LandingBlockOffset.finalizePb(momentumBlock);
+                LandingBlockOffset.finalizePb(momentumBlock);
+            }
         }
 
         boolean[] keys = new boolean[] {gameSettings.keyBindForward.isKeyDown(),
@@ -273,6 +336,7 @@ public class ParkourTickListener {
 
             positionCheckedThisJump = false;
             inertiaCheckedThisJump = false;
+            pendingWaterCheck = false;
         }
         else lastAirtime = airtime;
         if (lastTick.forward() != 0 || lastTick.strafe() != 0 || lastTick.keys[4] || lastTick.keys[6]){
@@ -321,6 +385,7 @@ public class ParkourTickListener {
 
                 inertiaCheckedThisJump = true;
             }
+
         }//end checking inertia
     }
 
@@ -340,7 +405,9 @@ public class ParkourTickListener {
             if (!((zMin <= z && z <= zMax) || (zMax <= z && z <= zMin))) return;
 
             DecimalFormat df = CyvForge.df;
+
             CyvForge.sendChatMessage("X: " + df.format(x) + ", Z: " + df.format(z));
+
             positionCheckedThisJump = true;
 
         } else if (airtime == checkTick && zNeo && !positionCheckedThisJump) {
@@ -348,9 +415,12 @@ public class ParkourTickListener {
             if (!((zMin <= lastTick.z && lastTick.z <= zMax) || (zMax <= lastTick.z && lastTick.z <= zMin))) return;
 
             DecimalFormat df = CyvForge.df;
+
             CyvForge.sendChatMessage("X: " + df.format(x) + ", Z: " + df.format(lastTick.z));
+
             positionCheckedThisJump = true;
         }
+
     }
 
     private static void calculateLastTiming() {
@@ -368,6 +438,18 @@ public class ParkourTickListener {
             lastMoveTime++;
             lastGroundMoveTime++;
             hasActed = true;
+
+            /*
+            if (lastMoveTime == 0) {
+                earliestMoveTimestamp = 0;
+                if (gameSettings.keyBindForward.isKeyDown()) earliestMoveTimestamp = gameSettings.keyBindForward.lastPressTime;
+                if (gameSettings.keyBindBack.isKeyDown() && (gameSettings.keyBindBack.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindBack.lastPressTime;
+                if (gameSettings.keyBindLeft.isKeyDown() && (gameSettings.keyBindLeft.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindLeft.lastPressTime;
+                if (gameSettings.keyBindRight.isKeyDown() && (gameSettings.keyBindRight.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindRight.lastPressTime;
+
+            }
+            
+             */
 
             //already jumped, started moving
             if (lastJumpTime > -1 && lastMoveTime == 0 && airtime != 0 && !(vy == 0 && lastTick.onGround)
@@ -426,6 +508,11 @@ public class ParkourTickListener {
                 if (lastSneakTime == -1) lastTiming = "Burst " + (lastGroundMoveTime) + " ticks";
                 else if (lastSneakTime > -1) lastTiming = "Burstjam " + (lastGroundMoveTime) + " ticks";
                 else lastTiming = "HH " + (lastGroundMoveTime) + " ticks";
+
+                /*
+                if (showMS && Math.abs((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) < 10000)
+                    lastTiming += " (" + ((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) + " ms)";
+                */
                 locked = true;
             }
 
@@ -515,6 +602,7 @@ public class ParkourTickListener {
 
                 if (!wobbledKey.isEmpty()) {
                     lastTiming = "Wobble (" + wobbledKey + ")";
+                    // locked = true;
                 }
             }
         }
@@ -576,6 +664,7 @@ public class ParkourTickListener {
     public static class PosTick {
 
         public PosTick(EntityPlayerSP player, double vx, double vy, double vz, int airtime, boolean[] keys) {
+
             this.x = player.posX;
             this.y = player.posY;
             this.z = player.posZ;
@@ -618,6 +707,7 @@ public class ParkourTickListener {
             this.keys = keys;
         }
 
+
         public boolean[] keys;
         public double x;
         public double y;
@@ -650,6 +740,7 @@ public class ParkourTickListener {
             if (keys[2] == true) i--; // Fixed: Was keys[3] (Right) instead of keys[2] (Back)
             return i;
         }
+
     }
 
     public static float formatYaw(float yaw) {
@@ -697,6 +788,7 @@ public class ParkourTickListener {
             }
 
         } catch (Exception ignored) {}
+
     }
 
     @SubscribeEvent
@@ -760,12 +852,21 @@ public class ParkourTickListener {
     @SubscribeEvent
     public void onMouse(MouseEvent event) {
         if (event.button == 1 && event.buttonstate) {
+
+            positionCheckedThisJump = false;
+            pendingWaterCheck = false;
+            inertiaCheckedThisJump = false;
+
+            waterDetectionLockout = 10;
+
             if (CyvClientConfig.getBoolean("antiCP", false)) {
+
                 long delayMs = CyvClientConfig.getInt("antiCPDelay", 1) * 1000L;
                 long timePassed = System.currentTimeMillis() - lastPbTimestamp;
 
                 if (timePassed < delayMs) {
                     event.setCanceled(true);
+
                     CyvForge.sendChatMessage("§cYou have AntiCP enabled, right-click cancelled.");
                 }
             }

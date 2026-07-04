@@ -21,23 +21,24 @@ public class LandingBlockOffset {
         sendChatOffset = false;
     }
 
-    public static void check(double x, double y, double z, double lastx, double lasty, double lastz, double nextX, double nextZ, LandingBlock b, int i) {
+    public static void check(double x, double y, double z, double lastx, double lasty, double lastz, double nextX, double nextY, double nextZ, LandingBlock b, int i) {
         Double xOffset = null, zOffset = null;
         Double eventX = null, eventZ = null;
 
-        if (y < b.bb[i].minY) return; //below bottom y
-        else if (y < b.bb[i].maxY && b.mode.equals(LandingMode.enter)) { //inside block on y
-            xOffset = checkX(x, b, i);
-            zOffset = checkZ(z, b, i);
-            eventX = x;
-            eventZ = z;
-        } else if (y <= b.bb[i].maxY && b.mode.equals(LandingMode.hit) && lasty >= b.bb[i].maxY) { //hit tick
-            xOffset = checkX(x, b, i);
-            zOffset = checkZ(z, b, i);
-            eventX = x;
-            eventZ = z;
-        } else if (y >= b.bb[i].maxY && (b.mode.equals(LandingMode.z_neo) || b.mode.equals(LandingMode.x_neo) || b.mode.equals(LandingMode.landing))) {
+        boolean isForcedTick = (b.targetTick != -1);
 
+        if (!b.isLiquid && !isForcedTick && y < b.bb[i].minY) return; //below bottom y
+        else if (!b.isLiquid && !isForcedTick && y < b.bb[i].maxY && b.mode.equals(LandingMode.enter)) { //inside block on y
+            xOffset = checkX(x, b, i);
+            zOffset = checkZ(z, b, i);
+            eventX = x;
+            eventZ = z;
+        } else if (b.mode.equals(LandingMode.hit) && (b.isLiquid || isForcedTick || (y <= b.bb[i].maxY && lasty >= b.bb[i].maxY))) { //hit tick
+            xOffset = checkX(x, b, i);
+            zOffset = checkZ(z, b, i);
+            eventX = x;
+            eventZ = z;
+        } else if (b.isLiquid || isForcedTick || (y >= b.bb[i].maxY && (b.mode.equals(LandingMode.z_neo) || b.mode.equals(LandingMode.x_neo) || b.mode.equals(LandingMode.landing)))) {
             xOffset = checkX(x, b, i);
             eventX = x;
             zOffset = checkZ(z, b, i);
@@ -60,9 +61,10 @@ public class LandingBlockOffset {
 
         }
 
-        //conditions
-        if (eventX == null || eventZ == null || !(eventX <= b.xMaxCond && eventX >= b.xMinCond &&
-                eventZ <= b.zMaxCond && eventZ >= b.zMinCond)) return;
+        if (!isForcedTick) {
+            if (eventX == null || eventZ == null || !(eventX <= b.xMaxCond && eventX >= b.xMinCond &&
+                    eventZ <= b.zMaxCond && eventZ >= b.zMinCond)) return;
+        }
 
         //finalize x and z offset
         AxisAlignedBB playerBB = Minecraft.getMinecraft().thePlayer.getEntityBoundingBox();

@@ -38,9 +38,11 @@ public class CommandSetbox extends CyvCommand {
             if (ParkourTickListener.landingBlock != null) {
                 lb = ParkourTickListener.landingBlock;
                 lb.bb = new AxisAlignedBB[]{mathBox};
+                lb.isLiquid = false;
                 CyvForge.sendChatMessage("Landing box changed.");
             } else {
                 lb = new LandingBlock(mathBox);
+                lb.isLiquid = false;
                 ParkourTickListener.landingBlock = lb;
                 CyvForge.sendChatMessage("Landing box set.");
             }

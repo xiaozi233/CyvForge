@@ -54,16 +54,23 @@ public class CommandSetmm extends CyvCommand {
             }
 
             if (target) {
-                MovingObjectPosition hit = player.rayTrace(100, 0);
-                if (hit.typeOfHit.equals(MovingObjectPosition.MovingObjectType.BLOCK)) {
+                net.minecraft.util.Vec3 eyePos = player.getPositionEyes(0);
+                net.minecraft.util.Vec3 lookVec = player.getLook(0);
+                net.minecraft.util.Vec3 endPos = eyePos.addVector(lookVec.xCoord * 100, lookVec.yCoord * 100, lookVec.zCoord * 100);
+
+                MovingObjectPosition hit = mc.theWorld.rayTraceBlocks(eyePos, endPos, true, false, true);
+
+                if (hit != null && hit.typeOfHit.equals(MovingObjectPosition.MovingObjectType.BLOCK)) {
                     try {
                         BlockPos pos = hit.getBlockPos();
                         List<AxisAlignedBB> list = CyvForge.getHitbox(pos, mc.theWorld);
 
                         net.minecraft.block.Block block = mc.theWorld.getBlockState(pos).getBlock();
+
+                        boolean isLiquid = block instanceof net.minecraft.block.BlockLiquid;
                         boolean isPassable = block instanceof net.minecraft.block.BlockLadder || block instanceof net.minecraft.block.BlockVine;
 
-                        if (list != null && list.isEmpty() && !isPassable) {
+                        if (list != null && list.isEmpty() && !isLiquid && !isPassable) {
                             CyvForge.sendChatMessage("Please look at a valid block.");
                             return;
                         } else {

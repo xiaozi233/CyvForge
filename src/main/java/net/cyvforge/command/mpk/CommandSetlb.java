@@ -37,6 +37,7 @@ public class CommandSetlb extends CyvCommand {
             LandingAxis axis = LandingAxis.both;
             boolean box = false;
             boolean target = false;
+            int targetTick = -1;
             for (String s : args) {
                 s = s.toLowerCase();
                 if (s.equals("x")) axis = LandingAxis.x;
@@ -51,19 +52,34 @@ public class CommandSetlb extends CyvCommand {
                 //shortcuts
                 else if (s.equals("slime")) { box = true; mode = LandingMode.hit; }
                 else if (s.equals("ladder") || s.equals("vine") ) { box = true; mode = LandingMode.enter; }
+
+                if (s.startsWith("tick") || s.startsWith("tier")) {
+                    try {
+                        targetTick = Integer.parseInt(s.substring(4));
+                    } catch (Exception e) {
+                        CyvForge.sendChatMessage("Invalid tick format. Use e.g. tick5 or tier5");
+                    }
+                }
             }
 
             if (target) {
-                MovingObjectPosition hit = player.rayTrace(100, 0);
-                if (hit.typeOfHit.equals(MovingObjectPosition.MovingObjectType.BLOCK)) {
+                net.minecraft.util.Vec3 eyePos = player.getPositionEyes(0);
+                net.minecraft.util.Vec3 lookVec = player.getLook(0);
+                net.minecraft.util.Vec3 endPos = eyePos.addVector(lookVec.xCoord * 100, lookVec.yCoord * 100, lookVec.zCoord * 100);
+
+                MovingObjectPosition hit = mc.theWorld.rayTraceBlocks(eyePos, endPos, true, false, true);
+
+                if (hit != null && hit.typeOfHit.equals(MovingObjectPosition.MovingObjectType.BLOCK)) {
                     try {
                         BlockPos pos = hit.getBlockPos();
                         List<AxisAlignedBB> list = CyvForge.getHitbox(pos, mc.theWorld);
 
                         net.minecraft.block.Block block = mc.theWorld.getBlockState(pos).getBlock();
+
+                        boolean isLiquid = block instanceof net.minecraft.block.BlockLiquid;
                         boolean isPassable = block instanceof net.minecraft.block.BlockLadder || block instanceof net.minecraft.block.BlockVine;
 
-                        if (list != null && list.isEmpty() && !isPassable) {
+                        if (list != null && list.isEmpty() && !isLiquid && !isPassable) {
                             CyvForge.sendChatMessage("Please look at a valid block.");
                             return;
                         } else {
@@ -104,6 +120,8 @@ public class CommandSetlb extends CyvCommand {
                     return;
                 }
             }
+            ParkourTickListener.landingBlock.targetTick = targetTick;
+            if (targetTick != -1) CyvForge.sendChatMessage("Target tick/tier set to: " + targetTick);
         }, "Set landing block").start();
     }
 }

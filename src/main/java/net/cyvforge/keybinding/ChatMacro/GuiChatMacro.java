@@ -116,9 +116,14 @@ public class GuiChatMacro extends CyvGui {
 
     @Override
     public void handleMouseInput() throws IOException {
+        int eventDWheel = net.cyvforge.event.events.GuiHandler.scrollBuffer;
+        net.cyvforge.event.events.GuiHandler.scrollBuffer = 0;
+
+        if (eventDWheel != 0 && !org.lwjgl.input.Mouse.isButtonDown(0)) {
+            vScroll -= eventDWheel * 0.05;
+        }
+
         super.handleMouseInput();
-        int wheel = Mouse.getDWheel();
-        if (wheel != 0) vScroll -= wheel * 0.08f;
     }
 
     @Override
