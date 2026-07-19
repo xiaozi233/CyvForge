@@ -110,7 +110,7 @@ public class LabelBundleLasts extends LabelBundle {
                 String z = df.format(ParkourTickListener.lastTurning);
 
                 drawString("Last Turning: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
-                drawString(z, pos.getAbsoluteX() + 1 + font.getStringWidth("Last Turning: "),
+                drawString(z+"\u00B0", pos.getAbsoluteX() + 1 + font.getStringWidth("Last Turning: "),
                         pos.getAbsoluteY() + 1, color2);
             }
             public void renderDummy(ScreenPosition pos) {
@@ -122,7 +122,7 @@ public class LabelBundleLasts extends LabelBundle {
                 for (int i=0; i<CyvClientConfig.getInt("df",5); i++) str.append("0");
 
                 drawString("Last Turning: ", pos.getAbsoluteX() + 1, pos.getAbsoluteY() + 1, color1);
-                drawString(str.toString(), pos.getAbsoluteX() + 1 + font.getStringWidth("Last Turning: "),
+                drawString(str.toString()+"\u00B0", pos.getAbsoluteX() + 1 + font.getStringWidth("Last Turning: "),
                         pos.getAbsoluteY() + 1, color2);
             }
         });

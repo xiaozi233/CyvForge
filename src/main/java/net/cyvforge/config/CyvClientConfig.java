@@ -15,6 +15,7 @@ public class CyvClientConfig {
         configFields.put("color1", new ConfigValue<String>("aqua"));
         configFields.put("color2", new ConfigValue<String>("white"));
         configFields.put("theme", new ConfigValue<String>("CYVISPIRIA"));
+        configFields.put("chatPrefix", new ConfigValue<String>("Cyv"));
         configFields.put("whiteChat", new ConfigValue<Boolean>(false));
 
         configFields.put("df", new ConfigValue<Integer>(5));
@@ -48,9 +49,8 @@ public class CyvClientConfig {
         // macros
         configFields.put("currentMacro", new ConfigValue<String>("macro"));
         configFields.put("smoothMacro", new ConfigValue<Boolean>(false));
-
-        //presets
-        configFields.put("selectedPreset", new ConfigValue<String>("none"));
+        configFields.put("macroClipEnabled", new ConfigValue<Boolean>(false));
+        configFields.put("macroClipTicks", new ConfigValue<Integer>(100));
 
         // inertia listener
         configFields.put("inertiaEnabled", new ConfigValue<Boolean>(false));
@@ -63,6 +63,7 @@ public class CyvClientConfig {
         // position checker
         configFields.put("positionCheckerEnabled", new ConfigValue<Boolean>(false));
         configFields.put("positionCheckerTick", new ConfigValue<Integer>(7));
+        configFields.put("positionCheckerRadius", new ConfigValue<Double>(0.1));
         configFields.put("positionCheckerMinX", new ConfigValue<Double>(-10000.0));
         configFields.put("positionCheckerMaxX", new ConfigValue<Double>(10000.0));
         configFields.put("positionCheckerMinZ", new ConfigValue<Double>(-10000.0));
@@ -75,6 +76,10 @@ public class CyvClientConfig {
         configFields.put("singleplayerCheckpointsEnabled", new ConfigValue<Boolean>(true));
         configFields.put("generatorDyeColor", new ConfigValue<Integer>(1));
         configFields.put("generatorItemSlot", new ConfigValue<Integer>(0));
+
+        // active
+        configFields.put("selectedPreset", new ConfigValue<String>("none"));
+        configFields.put("fullbright", new ConfigValue<Boolean>(false));
 
         for (DraggableHUDElement mod : HUDManager.registeredRenderers) {
             String name = mod.getName();

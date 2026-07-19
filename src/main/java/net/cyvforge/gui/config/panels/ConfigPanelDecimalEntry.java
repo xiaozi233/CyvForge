@@ -54,15 +54,29 @@ public class ConfigPanelDecimalEntry implements ConfigPanel {
 
     @Override
     public void draw(int mouseX, int mouseY, int scroll) {
+        boolean active = isEnabled();
+        int textColor = active ? 0xFFFFFFFF : 0xFF777777;
+        int bgColor;
+
+        if (!active) {
+            bgColor = 0x80555555;
+            this.field.setFocused(false);
+        } else {
+            bgColor = this.mouseInBounds(mouseX, mouseY + scroll) ? CyvForge.theme.shade1 : CyvForge.theme.shade2;
+        }
+
         //text label
-        GuiUtils.drawString(this.displayString, this.xPosition, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, 0xFFFFFFFF, true);
+        GuiUtils.drawString(this.displayString, this.xPosition, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
         //bg
-        GuiUtils.drawRoundedRect(this.xPosition+this.sizeX/2, this.yPosition-scroll, this.xPosition+this.sizeX, this.yPosition+this.sizeY-scroll, 3, this.mouseInBounds(mouseX, mouseY) ? CyvForge.theme.shade1 : CyvForge.theme.shade2);
+        GuiUtils.drawRoundedRect(this.xPosition+this.sizeX/2, this.yPosition-scroll, this.xPosition+this.sizeX, this.yPosition+this.sizeY-scroll, 3, bgColor);
 
         this.field.yPosition = this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2 + 1 - scroll;
         this.field.drawTextBox();
 
+    }
 
+    @Override public int getIndex() {
+        return this.index;
     }
 
     @Override
@@ -71,13 +85,15 @@ public class ConfigPanelDecimalEntry implements ConfigPanel {
 
     @Override
     public boolean mouseInBounds(int mouseX, int mouseY) {
-        if (mouseX > this.xPosition+this.sizeX/2 && mouseY > this.yPosition
+        if (isEnabled() && mouseX > this.xPosition+this.sizeX/2 && mouseY > this.yPosition
                 && mouseX < this.xPosition+this.sizeX && mouseY < this.yPosition+this.sizeY) return true;
         return false;
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (!isEnabled()) return;
+
         this.field.mouseClicked(mouseX, mouseY, mouseButton);
 
         if (!(mouseX >= field.xPosition && mouseX <= field.xPosition + field.width && mouseY >= field.yPosition && mouseY <= field.yPosition + field.height)) {

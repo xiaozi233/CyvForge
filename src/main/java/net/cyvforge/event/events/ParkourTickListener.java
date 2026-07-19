@@ -35,6 +35,14 @@ public class ParkourTickListener {
     public static PosTick thirdLastTick = new PosTick(0, 0, 0, 0, new boolean[] {false, false, false, false, false, false, false});
     public static boolean pendingWaterCheck = false;
     public static int waterDetectionLockout = 0;
+    private static long jumpTimestamp = 0;
+    private static long moveTimestamp = 0;
+    private static long sprintTimestamp = 0;
+    private static long releaseTimestamp = 0;
+    private static int stopCounter = 0;
+    private static int waitCounter = 0;
+    private static int runCounter = 0;
+    public static boolean hasInputtedSinceReset = false;
 
     public static int lastAirtime;
     public static double x = 0, y = 0, z = 0; //coords
@@ -85,11 +93,46 @@ public class ParkourTickListener {
     private static int lastMoveTime = -1;
     private static int lastSprintTime = -1;
     private static int lastSneakTime = -2;
+    public static int lastStopTime = 0;
+    public static int lastWaitTime = 0;
+    public static int lastRunTime = 0;
 
     private static long earliestMoveTimestamp;
     private static boolean locked = false;
     private static boolean hasActed = false;
     private static boolean hasCollided = false;
+
+
+    @SubscribeEvent
+    public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.currentScreen != null) return;
+
+        int keyCode = org.lwjgl.input.Keyboard.getEventKey();
+        long eventTime = org.lwjgl.input.Keyboard.getEventNanoseconds();
+
+        if (org.lwjgl.input.Keyboard.getEventKeyState()) {
+            if (keyCode == mc.gameSettings.keyBindForward.getKeyCode() ||
+                    keyCode == mc.gameSettings.keyBindLeft.getKeyCode() ||
+                    keyCode == mc.gameSettings.keyBindRight.getKeyCode() ||
+                    keyCode == mc.gameSettings.keyBindBack.getKeyCode()) {
+                moveTimestamp = eventTime;
+            }
+            if (keyCode == mc.gameSettings.keyBindJump.getKeyCode()) {
+                jumpTimestamp = eventTime;
+            }
+            if (keyCode == mc.gameSettings.keyBindSprint.getKeyCode()) {
+                sprintTimestamp = eventTime;
+            }
+        } else {
+            if (keyCode == mc.gameSettings.keyBindForward.getKeyCode() ||
+                    keyCode == mc.gameSettings.keyBindLeft.getKeyCode() ||
+                    keyCode == mc.gameSettings.keyBindRight.getKeyCode() ||
+                    keyCode == mc.gameSettings.keyBindBack.getKeyCode()) {
+                releaseTimestamp = eventTime;
+            }
+        }
+    }
 
     //end of tick
     @SubscribeEvent
@@ -100,16 +143,59 @@ public class ParkourTickListener {
         EntityPlayerSP mcPlayer = mc.thePlayer;
         GameSettings gameSettings = mc.gameSettings;
 
-        if (mcPlayer == null) return;
+        if (mcPlayer == null || mc.theWorld == null || mc.isGamePaused()) return;
+
+        calculateLastTiming();
+        doCheckpoints();
+
+        boolean isAnyInput = gameSettings.keyBindForward.isKeyDown() || gameSettings.keyBindBack.isKeyDown() ||
+                gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown() ||
+                gameSettings.keyBindJump.isKeyDown() || gameSettings.keyBindSneak.isKeyDown();
+
+        boolean isWASD = gameSettings.keyBindForward.isKeyDown() || gameSettings.keyBindBack.isKeyDown() ||
+                gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown();
+
+        if (isAnyInput) hasInputtedSinceReset = true;
+
+        if (hasInputtedSinceReset) {
+
+            // runtime
+            if (lastTick != null && lastTick.onGround && !mcPlayer.onGround) {
+                if (runCounter > 0) lastRunTime = runCounter;
+                runCounter = 0;
+            }
+
+            if (mcPlayer.onGround) {
+                if (isWASD && !gameSettings.keyBindJump.isKeyDown()) {
+                    if (lastTick != null && lastTick.onGround) runCounter++;
+                } else if (!isWASD) {
+                    runCounter = 0;
+                }
+            }
+
+            // stoptime
+            if (!isWASD) {
+                stopCounter++;
+            } else {
+                if (stopCounter > 0) {
+                    lastStopTime = stopCounter;
+                    stopCounter = 0;
+                }
+            }
+
+            // waittime
+            if (mcPlayer.onGround && !isAnyInput && lastTick != null && lastTick.onGround) {
+                waitCounter++;
+            } else {
+                if (waitCounter > 0) lastWaitTime = waitCounter;
+                waitCounter = 0;
+                if (!mcPlayer.onGround) waitCounter = 0;
+            }
+        }
 
         if (lastTick.hasCollidedHorizontally && !hasCollided) {
             hasCollided = true;
         }
-
-        if (mc.theWorld == null || mc.isGamePaused()) return;
-
-        calculateLastTiming();
-        doCheckpoints();
 
         if (waterDetectionLockout > 0) waterDetectionLockout--;
 
@@ -403,7 +489,7 @@ public class ParkourTickListener {
     }
 
     private static void calculateLastTiming() {
-        boolean showMS = /*ModManager.getMod(ModMPKMod.class).showMilliseconds;*/false;
+        boolean showMS = CyvClientConfig.getBoolean("showMilliseconds", true);
         GameSettings gameSettings = Minecraft.getMinecraft().gameSettings;
 
         if (gameSettings.keyBindForward.isKeyDown() || //ANYTHING IS PRESSED
@@ -414,29 +500,17 @@ public class ParkourTickListener {
             lastGroundMoveTime++;
             hasActed = true;
 
-            /*
-            if (lastMoveTime == 0) {
-                earliestMoveTimestamp = 0;
-                if (gameSettings.keyBindForward.isKeyDown()) earliestMoveTimestamp = gameSettings.keyBindForward.lastPressTime;
-                if (gameSettings.keyBindBack.isKeyDown() && (gameSettings.keyBindBack.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindBack.lastPressTime;
-                if (gameSettings.keyBindLeft.isKeyDown() && (gameSettings.keyBindLeft.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindLeft.lastPressTime;
-                if (gameSettings.keyBindRight.isKeyDown() && (gameSettings.keyBindRight.lastPressTime > earliestMoveTimestamp)) earliestMoveTimestamp = gameSettings.keyBindRight.lastPressTime;
-
-            }
-            
-             */
-
             //already jumped, started moving
             if (lastJumpTime > -1 && lastMoveTime == 0 && airtime != 0 && !(vy == 0 && lastTick.onGround)
                     && (lastTiming.contains("Pessi") || !locked)) {
                 if ((lastJumpTime+1) == 1) lastTiming = "Max Pessi";
                 else lastTiming = "Pessi " + (lastJumpTime+1) + " ticks";
-                locked = true;
+                long diff = Math.abs(moveTimestamp - jumpTimestamp) / 1000000;
 
-                /*
-                if (showMS && Math.abs((earliestMoveTimestamp - gameSettings.keyBindJump.lastPressTime) / 1000000) < 10000)
-                    lastTiming += " (" + ((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) + " ms)";
-                */
+                if (showMS && diff < 500) {
+                    lastTiming += " (" + diff + "ms)";
+                }
+                locked = true;
             }
 
             if (lastTick.onGround && !secondLastTick.onGround) { //landed
@@ -456,24 +530,26 @@ public class ParkourTickListener {
             //already jumped, started moving
             if ((lastGroundMoveTime == 0 || lastMoveTime == 0) && !locked) {
                 lastTiming = "Jam";
-                /*
-                if (((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) != 0 && showMS) {
-                    lastTiming += " (" + ((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) + " ms)";
+
+                long diff = Math.abs(jumpTimestamp - moveTimestamp) / 1000000;
+
+                if (showMS && diff < 1000) {
+                    lastTiming += " (" + diff + "ms)";
                 }
-                */
+
                 if (gameSettings.keyBindSprint.isKeyDown() || !gameSettings.keyBindForward.isKeyDown()) {
                     locked = true;
                 }
-                //already moved on ground
-            } else if (lastGroundMoveTime > -1 && !locked && lastJumpTime == 0) {
+            }
+            else if (lastGroundMoveTime > -1 && !locked && lastJumpTime == 0) {
                 if (lastSneakTime == -1) lastTiming = "Burst " + (lastGroundMoveTime) + " ticks";
                 else if (lastSneakTime > -1) lastTiming = "Burstjam " + (lastGroundMoveTime) + " ticks";
                 else lastTiming = "HH " + (lastGroundMoveTime) + " ticks";
 
-                /*
-                if (showMS && Math.abs((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) < 10000)
-                    lastTiming += " (" + ((gameSettings.keyBindJump.lastPressTime - earliestMoveTimestamp) / 1000000) + " ms)";
-                */
+                long diff = (jumpTimestamp - moveTimestamp) / 1000000;
+                if (showMS && Math.abs(diff) < 1000) {
+                    lastTiming += " (" + diff + "ms)";
+                }
                 locked = true;
             }
 
@@ -503,10 +579,10 @@ public class ParkourTickListener {
                 } else {
                     if (lastJumpTime == 1) lastTiming = "Max FMM";
                     else lastTiming = "FMM " + (lastJumpTime) + " ticks";
-                    /*
-                    if (showMS && Math.abs((gameSettings.keyBindSprint.lastPressTime - gameSettings.keyBindJump.lastPressTime) / 1000000) < 10000)
-                        lastTiming += " (" + ((gameSettings.keyBindSprint.lastPressTime - gameSettings.keyBindJump.lastPressTime) / 1000000) + " ms)";
-                    */
+
+                    long diff = (sprintTimestamp - jumpTimestamp) / 1000000;
+                    if (showMS && diff >= 0 && diff < 1000) lastTiming += " (" + diff + "ms)";
+
                     locked = true;
                 }
             }
@@ -517,47 +593,38 @@ public class ParkourTickListener {
 
         //mark
         if (airtime > 0) {
-            boolean pressingWNow = gameSettings.keyBindForward.isKeyDown();
-            boolean wasPressingW = lastTick.keys[0];
-            boolean wasPressingStrafe = lastTick.keys[1] || lastTick.keys[3];
+            if (gameSettings.keyBindForward.isKeyDown() && !lastTick.keys[0] && (lastTick.keys[1] || lastTick.keys[3])) {
+                long diff = (moveTimestamp - jumpTimestamp) / 1000000;
+                String msTxt = (showMS && diff >= 0 && diff < 1000) ? " (" + diff + "ms)" : "";
 
-            if (pressingWNow && !wasPressingW && wasPressingStrafe) {
-                boolean markInSidestep = CyvClientConfig.getBoolean("markInSidestep", true);
-
-                if (markInSidestep) {
+                if (CyvClientConfig.getBoolean("markInSidestep", true)) {
                     sidestep = 2;
                     sidestepTime = airtime;
                 } else {
-                    lastTiming = "Mark " + airtime + "t";
+                    lastTiming = "Mark " + airtime + "t" + msTxt;
                 }
             }
         }
 
         //strafejam
         if (CyvClientConfig.getBoolean("detectStrafejam", false) && airtime > 0) {
-            boolean pressingWNow = gameSettings.keyBindForward.isKeyDown();
-            boolean pressingStrafeNow = gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown();
+            if (gameSettings.keyBindForward.isKeyDown() && !(gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown())
+                    && lastTick.keys[0] && (lastTick.keys[1] || lastTick.keys[3])) {
 
-            boolean wasPressingW = lastTick.keys[0];
-            boolean wasPressingStrafe = lastTick.keys[1] || lastTick.keys[3];
+                long diff = (releaseTimestamp - jumpTimestamp) / 1000000;
+                String msTxt = (showMS && diff >= 0 && diff < 1000) ? " (" + diff + "ms)" : "";
+                String sjSuffix = "Strafejam " + (airtime) + "t" + msTxt;
 
-            if (pressingWNow && !pressingStrafeNow && wasPressingW && wasPressingStrafe) {
-
-                boolean jamOnly = CyvClientConfig.getBoolean("strafejamJamOnly", true);
-                String sjSuffix = "Strafejam " + (airtime) + "t";
-
-                if (!jamOnly) {
+                if (!CyvClientConfig.getBoolean("strafejamJamOnly", true)) {
                     if (lastTiming.isEmpty() || lastTiming.equals("-")) {
                         lastTiming = sjSuffix;
                     } else if (!lastTiming.contains("Strafejam")) {
                         lastTiming = lastTiming + " | " + sjSuffix;
-                    }
-                    locked = true;
-                } else {
-                    if (lastTiming.equals("Jam")) {
-                        lastTiming = sjSuffix;
                         locked = true;
                     }
+                } else if (lastTiming.startsWith("Jam") || lastTiming.startsWith("Mark")) {
+                    lastTiming = sjSuffix;
+                    locked = true;
                 }
             }
         }
@@ -574,7 +641,9 @@ public class ParkourTickListener {
                 if (gameSettings.keyBindRight.isKeyDown() && !lastTick.keys[3] && secondLastTick.keys[3]) wobbledKey += "D";
 
                 if (!wobbledKey.isEmpty()) {
-                    lastTiming = "Wobble (" + wobbledKey + ")";
+                    long diff = (moveTimestamp - releaseTimestamp) / 1000000;
+                    String msTxt = (showMS && diff >= 0 && diff < 1000) ? " " + diff + "ms" : "";
+                    lastTiming = "Wobble (" + wobbledKey + msTxt + ")";
                     // locked = true;
                 }
             }
@@ -826,6 +895,14 @@ public class ParkourTickListener {
             inertiaCheckedThisJump = false;
 
             waterDetectionLockout = 10;
+
+            stopCounter = 0;
+            waitCounter = 0;
+            runCounter = 0;
+            lastStopTime = 0;
+            lastWaitTime = 0;
+            lastRunTime = 0;
+            hasInputtedSinceReset = false;
 
             if (CyvClientConfig.getBoolean("antiCP", false)) {
 

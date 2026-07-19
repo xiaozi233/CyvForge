@@ -3,6 +3,7 @@ package net.cyvforge.command;
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
 import net.cyvforge.util.defaults.CyvCommand;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ public class CommandPositionChecker extends CyvCommand {
                 CyvForge.sendChatMessage("Position checker toggled on.");
             }
 
+        } else if (subcategory.equals("mark") || subcategory.equals("here") || subcategory.equals("set")) {
+            setMark();
         } else if (subcategory.equals("minx") || subcategory.equals("xmin")) {
             try {
                 CyvClientConfig.set("positionCheckerMinX", Double.parseDouble(args[1]));
@@ -99,10 +102,30 @@ public class CommandPositionChecker extends CyvCommand {
         }
     }
 
+    public static void setMark() {
+        double radius = CyvClientConfig.getDouble("positionCheckerRadius", 0.1);
+        double px = Minecraft.getMinecraft().thePlayer.posX;
+        double pz = Minecraft.getMinecraft().thePlayer.posZ;
+
+        double minX = Math.round((px - radius) * 100000.0) / 100000.0;
+        double maxX = Math.round((px + radius) * 100000.0) / 100000.0;
+        double minZ = Math.round((pz - radius) * 100000.0) / 100000.0;
+        double maxZ = Math.round((pz + radius) * 100000.0) / 100000.0;
+
+        CyvClientConfig.set("positionCheckerMinX", minX);
+        CyvClientConfig.set("positionCheckerMaxX", maxX);
+        CyvClientConfig.set("positionCheckerMinZ", minZ);
+        CyvClientConfig.set("positionCheckerMaxZ", maxZ);
+
+        net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+        CyvForge.sendChatMessage("Position checker bounds set to current position (+/- " + radius + ").");
+    }
+
     @Override
     public String getDetailedHelp() {
         return "Toggle on/off or modify position checker settings. Subcategories:"
                 + "\n[toggle]: Toggle listener on or off."
+                + "\n[mark]: Set bounds to current position with configured radius."
                 + "\n[minX/maxX/minZ/maxZ]: Set minimum and maximum coordinate bounds for a chat message."
                 + "\n[zneo]: Toggle z neo mode on or off."
                 + "\n[tick]: Set airtick to check your position.";

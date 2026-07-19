@@ -48,15 +48,29 @@ public class ConfigPanelOptionSwitcher<T> implements ConfigPanel {
 
     @Override
     public void draw(int mouseX, int mouseY, int scroll) {
+        boolean active = isEnabled();
+        int textColor = active ? 0xFFFFFFFF : 0xFF777777;
+        int bgColor;
+
+        if (!active) {
+            bgColor = 0x80555555;
+        } else {
+            bgColor = this.mouseInBounds(mouseX, mouseY + scroll) ? CyvForge.theme.accent1 : CyvForge.theme.accent2;
+        }
+
         //text label
-        GuiUtils.drawString(this.displayString, this.xPosition, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, 0xFFFFFFFF, true);
+        GuiUtils.drawString(this.displayString, this.xPosition, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
 
         //bg
-        GuiUtils.drawRoundedRect(this.xPosition+this.sizeX/2, this.yPosition-scroll, this.xPosition+this.sizeX, this.yPosition+this.sizeY-scroll, 3, this.mouseInBounds(mouseX, mouseY) ? CyvForge.theme.accent1 : CyvForge.theme.accent2);
+        GuiUtils.drawRoundedRect(this.xPosition+this.sizeX/2, this.yPosition-scroll, this.xPosition+this.sizeX, this.yPosition+this.sizeY-scroll, 3, bgColor);
 
         //amount
-        GuiUtils.drawCenteredString(""+this.sliderValues[this.sliderValue], this.xPosition+this.sizeX*3/4, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, 0xFFFFFFFF, true);
+        GuiUtils.drawCenteredString(""+this.sliderValues[this.sliderValue], this.xPosition+this.sizeX*3/4, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
 
+    }
+
+    @Override public int getIndex() {
+        return this.index;
     }
 
     @Override
@@ -66,13 +80,15 @@ public class ConfigPanelOptionSwitcher<T> implements ConfigPanel {
 
     @Override
     public boolean mouseInBounds(int mouseX, int mouseY) {
-        if (mouseX > this.xPosition+this.sizeX/2 && mouseY > this.yPosition
+        if (isEnabled() && mouseX > this.xPosition+this.sizeX/2 && mouseY > this.yPosition
                 && mouseX < this.xPosition+this.sizeX && mouseY < this.yPosition+this.sizeY) return true;
         return false;
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (!isEnabled()) return;
+
         if (mouseButton == 0) this.sliderValue++;
         else if (mouseButton == 1) this.sliderValue--;
         if (this.sliderValue >= this.sliderValues.length) this.sliderValue = 0;

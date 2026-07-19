@@ -42,6 +42,8 @@ public class CommandInitializer  {
 
         cyvCommands.add(new CommandMacro());
 
+        cyvCommands.add(new CommandFullbright());
+
         ClientCommandHandler.instance.registerCommand(new DefaultCommand());
     }
 

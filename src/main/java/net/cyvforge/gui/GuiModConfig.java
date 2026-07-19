@@ -1,6 +1,7 @@
 package net.cyvforge.gui;
 
 import net.cyvforge.CyvForge;
+import net.cyvforge.command.CommandPositionChecker;
 import net.cyvforge.config.ColorTheme;
 import net.cyvforge.config.CyvClientColorHelper;
 import net.cyvforge.config.CyvClientConfig;
@@ -122,7 +123,6 @@ public class GuiModConfig extends CyvGui {
 
     private void updatePanels() {
         this.panels.clear();
-        this.scroll = 0;
 
         // globals
         panels.add(new ConfigPanelOptionSwitcher<String>(panels, "color1", "Color 1", CyvClientColorHelper.colorStrings, this) {
@@ -133,6 +133,7 @@ public class GuiModConfig extends CyvGui {
             public void onValueChange() {
                 CyvForge.theme = ColorTheme.valueOf(CyvClientConfig.getString("theme", "CYVISPIRIA"));}
         });
+        panels.add(new ConfigPanelStringEntry(panels, "chatPrefix", "Chat Prefix", this));
         panels.add(new ConfigPanelToggle(panels, "whiteChat", "Color2 always white in chat", this));
         panels.add(new ConfigPanelIntegerSlider(panels, "df", "Decimal Precision", 1, 16, this) {
             public void onValueChange() {
@@ -161,7 +162,8 @@ public class GuiModConfig extends CyvGui {
         panels.add(new ConfigPanelToggle(panels, "markInSidestep", "Mark in Sidestep", this));
         panels.add(new ConfigPanelToggle(panels, "detectWobble", "Wobble Timing", this));
         panels.add(new ConfigPanelToggle(panels, "detectStrafejam", "Strafejam Timing", this));
-        panels.add(new ConfigPanelToggle(panels, "strafejamJamOnly", "Strafejam only after Jam", this));
+        dependantToggle("strafejamJamOnly", "Strafejam only after Jam", "detectStrafejam");
+
         panels.add(new ConfigPanelIntegerSlider(panels, "turnHUDAngleMin", "Turn HUD Angle Min", 1, 12, this));
         panels.add(new ConfigPanelIntegerSlider(panels, "turnHUDAngleMax", "Turn HUD Angle Max", 1, 12, this));
         panels.add(new ConfigPanelToggle(panels, "splitTurningHUD", "Split Turning HUD", this));
@@ -169,29 +171,37 @@ public class GuiModConfig extends CyvGui {
         // macro
         panels.add(new ConfigPanelEmptySpace(panels, this));
         panels.add(new ConfigPanelToggle(panels, "smoothMacro", "Smooth Macro", this));
+        panels.add(new ConfigPanelToggle(panels, "macroClipEnabled", "Macro Clip", this));
+        dependantSlider("macroClipTicks", "Number of ticks to clip", 1, 500, "macroClipEnabled");
 
         // inertia
+        panels.add(new ConfigPanelEmptySpace(panels, this));
         panels.add(new ConfigPanelToggle(panels, "inertiaEnabled", "Inertia Listener Enabled", this));
-        panels.add(new ConfigPanelIntegerSlider(panels, "inertiaTick", "Air tick", 1, 12, this));
-        panels.add(new ConfigPanelDecimalEntry(panels, "inertiaMin", "Min Speed", this));
-        panels.add(new ConfigPanelDecimalEntry(panels, "inertiaMax", "Max Speed", this));
-        panels.add(new ConfigPanelOptionSwitcher<>(panels, "inertiaAxis", "Inertia Axis", new Character[] {'x', 'z'}, this));
-        panels.add(new ConfigPanelOptionSwitcher<>(panels, "inertiaGroundType", "Ground Type", new String[] {"normal", "ice", "slime"}, this));
+        dependantSlider("inertiaTick", "Air tick", 1, 12, "inertiaEnabled");
+        dependantDecimal("inertiaMin", "Min Speed", "inertiaEnabled");
+        dependantDecimal("inertiaMax", "Max Speed", "inertiaEnabled");
+        dependantSwitcher("inertiaAxis", "Inertia Axis", new Character[] {'x', 'z'}, "inertiaEnabled");
+        dependantSwitcher("inertiaGroundType", "Ground Type", new String[] {"normal", "ice", "slime"}, "inertiaEnabled");
 
         // position checker
         panels.add(new ConfigPanelEmptySpace(panels, this));
         panels.add(new ConfigPanelToggle(panels, "positionCheckerEnabled", "Position Checker Enabled", this));
-        panels.add(new ConfigPanelIntegerSlider(panels, "positionCheckerTick", "Air tick", 1, 12, this));
-        panels.add(new ConfigPanelDecimalEntry(panels, "positionCheckerMinX", "Min X", this));
-        panels.add(new ConfigPanelDecimalEntry(panels, "positionCheckerMaxX", "Max X", this));
-        panels.add(new ConfigPanelDecimalEntry(panels, "positionCheckerMinZ", "Min Z", this));
-        panels.add(new ConfigPanelDecimalEntry(panels, "positionCheckerMaxZ", "Max Z", this));
-        panels.add(new ConfigPanelToggle(panels, "positionCheckerZNeo", "Z Neo Mode", this));
+        dependantSlider("positionCheckerTick", "Air tick", 1, 12, "positionCheckerEnabled");
+        dependantDecimal("positionCheckerRadius", "Radius", "positionCheckerEnabled");
+        dependantAction("Copy current position with radius", () -> {
+            net.cyvforge.command.CommandPositionChecker.setMark();
+            this.updatePanels();
+        }, "positionCheckerEnabled");
+        dependantDecimal("positionCheckerMinX", "Min X", "positionCheckerEnabled");
+        dependantDecimal("positionCheckerMaxX", "Max X", "positionCheckerEnabled");
+        dependantDecimal("positionCheckerMinZ", "Min Z", "positionCheckerEnabled");
+        dependantDecimal("positionCheckerMaxZ", "Max Z", "positionCheckerEnabled");
+        dependantToggle("positionCheckerZNeo", "Z Neo Mode", "positionCheckerEnabled");
 
         // checkpoints
         panels.add(new ConfigPanelEmptySpace(panels, this));
         panels.add(new ConfigPanelToggle(panels, "antiCP", "Anti-Checkpoint", this));
-        panels.add(new ConfigPanelIntegerSlider(panels, "antiCPDelay", "Anti-CP Delay (s)", 1, 10, this));
+        dependantSlider("antiCPDelay", "Anti-CP Delay (s)", 1, 10, "antiCP");
         panels.add(new ConfigPanelToggle(panels, "singleplayerCheckpointsEnabled", "Custom Checkpoints Enabled", this));
         panels.add(new ConfigPanelIntegerSlider(panels, "generatorDyeColor", "Generator Dye Color", 0, 15, this));
         panels.add(new ConfigPanelIntegerSlider(panels, "generatorItemSlot", "Generator Hotbar Slot", 0, 8, this));
@@ -199,6 +209,36 @@ public class GuiModConfig extends CyvGui {
         maxScroll = (int) Math.max(0, fontRendererObj.FONT_HEIGHT * 2 * Math.ceil(panels.size()) - (sizeY-20));
         if (scroll > maxScroll) scroll = maxScroll;
         if (scroll < 0) scroll = 0;
+    }
+
+    private void dependantToggle(String key, String name, String dep) {
+        panels.add(new ConfigPanelToggle(panels, key, name, this) {
+            @Override public boolean isEnabled() { return CyvClientConfig.getBoolean(dep, false); }
+        });
+    }
+
+    private void dependantSlider(String key, String name, int min, int max, String dep) {
+        panels.add(new ConfigPanelIntegerSlider(panels, key, name, min, max, this) {
+            @Override public boolean isEnabled() { return CyvClientConfig.getBoolean(dep, false); }
+        });
+    }
+
+    private void dependantDecimal(String key, String name, String dep) {
+        panels.add(new ConfigPanelDecimalEntry(panels, key, name, this) {
+            @Override public boolean isEnabled() { return CyvClientConfig.getBoolean(dep, false); }
+        });
+    }
+
+    private <T> void dependantSwitcher(String key, String name, T[] options, String dep) {
+        panels.add(new ConfigPanelOptionSwitcher<T>(panels, key, name, options, this) {
+            @Override public boolean isEnabled() { return CyvClientConfig.getBoolean(dep, false); }
+        });
+    }
+
+    private void dependantAction(String name, Runnable action, String dep) {
+        panels.add(new ConfigPanelAction(panels, name, action, this) {
+            @Override public boolean isEnabled() { return CyvClientConfig.getBoolean(dep, false); }
+        });
     }
 
     @Override
@@ -251,6 +291,8 @@ public class GuiModConfig extends CyvGui {
         }
 
         if (this.backButton.clicked(mouseX, mouseY, mouseButton)) {
+            if (this.selectedPanel != null) this.selectedPanel.unselect();
+
             if (fromLabels) Minecraft.getMinecraft().displayGuiScreen(new GuiMPK());
             else Minecraft.getMinecraft().displayGuiScreen(null);
             return;
@@ -258,13 +300,15 @@ public class GuiModConfig extends CyvGui {
 
         if (mouseX < sr.getScaledWidth()/2-sizeX/2-4 || mouseX > sr.getScaledWidth()/2+sizeX/2+14 ||
                 mouseY < sr.getScaledHeight()/2-sizeY/2-4 || mouseY > sr.getScaledHeight()/2+sizeY/2+4) {
+            if (this.selectedPanel != null) this.selectedPanel.unselect();
+
             this.selectedPanel = null;
             return;
         }
 
         for (ConfigPanel p : this.panels) {
-            if (p.mouseInBounds(mouseX, mouseY+(int)scroll)) {
-                if (this.selectedPanel != null) this.selectedPanel.unselect();
+            if (p.isEnabled() && p.mouseInBounds(mouseX, mouseY+(int)scroll)) {
+                if (this.selectedPanel != null && this.selectedPanel != p) this.selectedPanel.unselect();
 
                 p.mouseClicked(mouseX, mouseY+(int)scroll, mouseButton);
                 this.selectedPanel = p;
@@ -273,6 +317,9 @@ public class GuiModConfig extends CyvGui {
             }
         }
 
+        if (this.selectedPanel != null) {
+            this.selectedPanel.unselect();
+        }
         this.selectedPanel = null;
     }
 

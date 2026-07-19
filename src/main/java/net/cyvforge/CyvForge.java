@@ -60,6 +60,14 @@ public class CyvForge {
 
 		net.cyvforge.keybinding.ChatMacro.ChatMacroManager.load();
 		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.SignCommandListener());
+		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.MacroRecorder());
+
+		if (CyvClientConfig.getBoolean("fullbright", true)) {
+			Minecraft.getMinecraft().gameSettings.gammaSetting = 1000f;
+		} else {
+			Minecraft.getMinecraft().gameSettings.gammaSetting = 1.0f;
+		}
+
 
 		CommandInitializer.register(); //register mod commands
 		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
@@ -78,10 +86,12 @@ public class CyvForge {
 	/**Send a client-sided message to the player*/
 	public static void sendChatMessage(Object text) {
 		try {
+			String prefix = CyvClientConfig.getString("chatPrefix", "Cyv");
+
 			String chatColor2 = CyvClientConfig.getBoolean("whiteChat", false) ?
 					CyvClientColorHelper.colors.get(12).getChatFormatting() : CyvClientColorHelper.color2.getChatFormatting();
 			Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new ChatComponentText(
-					CyvClientColorHelper.color1.getChatFormatting() + "<Cyv> " + chatColor2 + text.toString()));
+					CyvClientColorHelper.color1.getChatFormatting() + "<" + prefix + "> " + chatColor2 + text.toString()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
