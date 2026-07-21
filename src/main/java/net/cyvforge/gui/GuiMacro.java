@@ -92,11 +92,21 @@ public class GuiMacro extends CyvGui {
                         macroLine.jump = Boolean.valueOf(line.get(4));
                         macroLine.sprint = Boolean.valueOf(line.get(5));
                         macroLine.sneak = Boolean.valueOf(line.get(6));
-                        macroLine.rmb = Boolean.valueOf(line.get(7));
+                        //macroLine.rmb = Boolean.valueOf(line.get(7));
 
-                        macroLine.yawField.setText(""+Double.valueOf(line.get(8)));
-                        macroLine.pitchField.setText(""+Double.valueOf(line.get(9)));
+                        //macroLine.yawField.setText(""+Double.valueOf(line.get(8)));
+                        //macroLine.pitchField.setText(""+Double.valueOf(line.get(9)));
 
+                        // transisition fix for when i added RMB
+                        if (line.size() == 9) {
+                            macroLine.rmb = false;
+                            macroLine.yawField.setText("" + Double.valueOf(line.get(7)));
+                            macroLine.pitchField.setText("" + Double.valueOf(line.get(8)));
+                        } else {
+                            macroLine.rmb = Boolean.valueOf(line.get(7));
+                            macroLine.yawField.setText("" + Double.valueOf(line.get(8)));
+                            macroLine.pitchField.setText("" + Double.valueOf(line.get(9)));
+                        }
 
                         macroLines.add(macroLine);
 

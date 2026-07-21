@@ -123,9 +123,19 @@ public class CommandMacro extends CyvCommand {
             if (macroRunning == 0) {
                 Gson gson = new Gson();
                 JsonReader reader = new JsonReader(new FileReader(MacroFileInit.macroFile));
-                macro = gson.fromJson(reader, ArrayList.class);
-                macroRunning = macro.size() + 1; //MovementListener starts macro
+                //macro = gson.fromJson(reader, ArrayList.class);
 
+                // transisition fix for when i added RMB
+                ArrayList<ArrayList<String>> rawMacro = gson.fromJson(reader, ArrayList.class);
+                macro = new ArrayList<>();
+                for (ArrayList<String> line : rawMacro) {
+                    if (line.size() == 9) {
+                        line.add(7, "false");
+                    }
+                    macro.add(line);
+                }
+
+                macroRunning = macro.size() + 1; //MovementListener starts macro
             }
 
         } catch (FileNotFoundException e) {

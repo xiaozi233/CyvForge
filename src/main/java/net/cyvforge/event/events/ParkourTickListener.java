@@ -41,7 +41,7 @@ public class ParkourTickListener {
     private static long releaseTimestamp = 0;
     private static int stopCounter = 0;
     private static int waitCounter = 0;
-    private static int runCounter = 0;
+    public static int runCounter = 0;
     public static boolean hasInputtedSinceReset = false;
 
     public static int lastAirtime;
@@ -160,17 +160,22 @@ public class ParkourTickListener {
         if (hasInputtedSinceReset) {
 
             // runtime
-            if (lastTick != null && lastTick.onGround && !mcPlayer.onGround) {
-                if (runCounter > 0) lastRunTime = runCounter;
-                runCounter = 0;
-            }
-
             if (mcPlayer.onGround) {
-                if (isWASD && !gameSettings.keyBindJump.isKeyDown()) {
-                    if (lastTick != null && lastTick.onGround) runCounter++;
-                } else if (!isWASD) {
+                if (gameSettings.keyBindJump.isKeyDown()) {
+                    if (runCounter > 0) {
+                        lastRunTime = runCounter;
+                    }
                     runCounter = 0;
                 }
+                else if (isWASD && lastTick != null && lastTick.onGround) {
+                    runCounter++;
+                    lastRunTime = runCounter;
+                }
+                else {
+                    runCounter = 0;
+                }
+            } else {
+                runCounter = 0;
             }
 
             // stoptime
