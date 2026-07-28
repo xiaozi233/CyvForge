@@ -1,8 +1,8 @@
 package net.cyvforge.gui.config.panels;
 
 import net.cyvforge.CyvForge;
-import net.cyvforge.gui.GuiModConfig;
 import net.cyvforge.gui.config.ConfigPanel;
+import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class ConfigPanelAction implements ConfigPanel {
     public String displayString;
     public final int index;
-    public GuiModConfig screenIn;
+    public CyvGui screenIn;
     public Runnable action;
 
     private int xPosition;
@@ -20,17 +20,17 @@ public class ConfigPanelAction implements ConfigPanel {
     private int sizeX;
     private int sizeY;
 
-    public ConfigPanelAction(ArrayList<ConfigPanel> array, String displayString, Runnable action, GuiModConfig screenIn) {
+    public ConfigPanelAction(ArrayList<ConfigPanel> array, String displayString, Runnable action, CyvGui screenIn) {
         this.index = array.size();
         this.displayString = displayString;
         this.action = action;
         this.screenIn = screenIn;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        sizeX = screenIn.sizeX - 20;
-        sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 3 / 2;
-        this.xPosition = sr.getScaledWidth() / 2 - screenIn.sizeX / 2 + 10;
-        this.yPosition = sr.getScaledHeight() / 2 - screenIn.sizeY / 2 + 10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
+        this.sizeX = screenIn.getSizeX() - 20;
+        this.sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 3 / 2;
+        this.xPosition = sr.getScaledWidth() / 2 - screenIn.getSizeX() / 2 + 10;
+        this.yPosition = sr.getScaledHeight() / 2 - screenIn.getSizeY() / 2 + 10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
     }
 
     @Override
@@ -53,6 +53,13 @@ public class ConfigPanelAction implements ConfigPanel {
 
         //text label
         GuiUtils.drawCenteredString(this.displayString, btnX + (btnWidth / 2), this.yPosition + this.sizeY / 2 - Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT / 2 + 1 - scroll, textColor, active);
+    }
+
+    @Override
+    public void setPos(int x, int y, int width) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.sizeX = width;
     }
 
     @Override public int getIndex() {

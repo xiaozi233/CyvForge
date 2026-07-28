@@ -57,6 +57,7 @@ public class CyvForge {
 
 		MinecraftForge.EVENT_BUS.register(new KeyInputHandler());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
+		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.ChatSuggestionsHandler());
 
 		net.cyvforge.keybinding.ChatMacro.ChatMacroManager.load();
 		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.SignCommandListener());
@@ -73,6 +74,7 @@ public class CyvForge {
 		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
 		MinecraftForge.EVENT_BUS.register(new MacroListener());
 		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());
+		MinecraftForge.EVENT_BUS.register(new pHandler());
 
 		LogManager.getLogger().info("CyvForge mod initialized!");
 

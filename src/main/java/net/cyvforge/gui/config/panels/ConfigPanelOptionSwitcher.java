@@ -2,8 +2,8 @@ package net.cyvforge.gui.config.panels;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
-import net.cyvforge.gui.GuiModConfig;
 import net.cyvforge.gui.config.ConfigPanel;
+import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -16,24 +16,24 @@ public class ConfigPanelOptionSwitcher<T> implements ConfigPanel {
     public String displayString;
     public final int index;
     public final T[] sliderValues;
-    public GuiModConfig screenIn;
+    public CyvGui screenIn;
 
     private int xPosition;
     private int yPosition;
     private int sizeX;
     private int sizeY;
 
-    public ConfigPanelOptionSwitcher(ArrayList<ConfigPanel> array, String configOption, String displayString, T[] options, GuiModConfig screenIn) {
+    public ConfigPanelOptionSwitcher(ArrayList<ConfigPanel> array, String configOption, String displayString, T[] options, CyvGui screenIn) {
         this.index = array.size();
         this.displayString = displayString;
         this.configOption = configOption;
         this.screenIn = screenIn;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        sizeX = screenIn.sizeX-20;
+        sizeX = screenIn.getSizeX()-20;
         sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT*3/2;
-        this.xPosition = sr.getScaledWidth()/2-screenIn.sizeX/2+10;
-        this.yPosition = sr.getScaledHeight()/2-screenIn.sizeY/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
+        this.xPosition = sr.getScaledWidth()/2-screenIn.getSizeX()/2+10;
+        this.yPosition = sr.getScaledHeight()/2-screenIn.getSizeY()/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
 
         this.sliderValues = options;
         this.sliderValue = 0;
@@ -67,6 +67,13 @@ public class ConfigPanelOptionSwitcher<T> implements ConfigPanel {
         //amount
         GuiUtils.drawCenteredString(""+this.sliderValues[this.sliderValue], this.xPosition+this.sizeX*3/4, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
 
+    }
+
+    @Override
+    public void setPos(int x, int y, int width) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.sizeX = width;
     }
 
     @Override public int getIndex() {

@@ -5,6 +5,7 @@ import net.cyvforge.config.CyvClientConfig;
 import net.cyvforge.util.defaults.CyvCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
+import java.util.List;
 
 import java.util.ArrayList;
 
@@ -14,10 +15,11 @@ public class CommandPositionChecker extends CyvCommand {
         this.hasArgs = true;
         this.usage = "[subcategory]";
         this.helpString = "Configure position checker. Use /cyv help pos for more info.";
+
         this.aliases = new ArrayList<String>();
-        aliases.add("pos");
-        aliases.add("poscheck");
-        aliases.add("poschecker");
+        this.aliases.add("pos");
+        this.aliases.add("poscheck");
+        this.aliases.add("poschecker");
     }
 
 
@@ -122,10 +124,14 @@ public class CommandPositionChecker extends CyvCommand {
     }
 
     @Override
+    public List<String> getTabCompletions(String[] args) {
+        return java.util.Arrays.asList("toggle", "minx", "maxx", "minz", "maxz", "tick", "zneo");
+    }
+
+    @Override
     public String getDetailedHelp() {
         return "Toggle on/off or modify position checker settings. Subcategories:"
                 + "\n[toggle]: Toggle listener on or off."
-                + "\n[mark]: Set bounds to current position with configured radius."
                 + "\n[minX/maxX/minZ/maxZ]: Set minimum and maximum coordinate bounds for a chat message."
                 + "\n[zneo]: Toggle z neo mode on or off."
                 + "\n[tick]: Set airtick to check your position.";

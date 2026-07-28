@@ -18,8 +18,8 @@ import java.util.List;
 public class CommandSetmm extends CyvCommand {
     public CommandSetmm() {
         super("setmm");
-        hasArgs = true;
-        usage = "[arguments]";
+        this.hasArgs = true;
+        this.usage = "[arguments]";
         this.helpString = "Set momentum block";
     }
 
@@ -49,8 +49,8 @@ public class CommandSetmm extends CyvCommand {
                 else if (s.equals("box")) box = true;
                 else if (s.equals("target")) target = true;
                 //shortcuts
-                else if (s.equals("slime")) { box = true; mode = LandingMode.hit; }
-                else if (s.equals("ladder") || s.equals("vine")) { box = true; mode = LandingMode.enter; }
+                else if (s.equals("slime") || s.equals("ice") || s.equals("slime/ice")) { box = true; mode = LandingMode.hit; }
+                else if (s.equals("ladder") || s.equals("vine") || s.equals("ladder/vine") ) { box = true; mode = LandingMode.enter; }
             }
 
             if (target) {
@@ -75,7 +75,7 @@ public class CommandSetmm extends CyvCommand {
                             return;
                         } else {
                             ParkourTickListener.momentumBlock = new LandingBlock(pos, mode, axis, box);
-                            CyvForge.sendChatMessage("Successfully set landing block.");
+                            CyvForge.sendChatMessage("Successfully set momentum block.");
                         }
                     } catch (Exception e) {
                         CyvForge.sendChatMessage("Please look at a valid block.");
@@ -103,7 +103,7 @@ public class CommandSetmm extends CyvCommand {
                         return;
                     } else {
                         ParkourTickListener.momentumBlock = new LandingBlock(pos, mode, axis, box);
-                        CyvForge.sendChatMessage("Successfully set landing block.");
+                        CyvForge.sendChatMessage("Successfully set momentum block.");
                     }
 
                 } else {
@@ -111,7 +111,12 @@ public class CommandSetmm extends CyvCommand {
                     return;
                 }
             }
-        }, "Set landing block").start();
+        }, "Set momentum block").start();
 
+    }
+
+    @Override
+    public List<String> getTabCompletions(String[] args) {
+        return java.util.Arrays.asList("target", "box", "hit", "enter", "x", "z", "zneo", "xneo", "tick", "ladder/vine", "slime/ice");
     }
 }

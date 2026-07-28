@@ -12,6 +12,9 @@ public class MacroRecorder {
     private float lastYaw = 0;
     private float lastPitch = 0;
 
+    private float pendingYawDelta = 0;
+    private float pendingPitchDelta = 0;
+
     public static ArrayList<ArrayList<String>> clipBuffer = new ArrayList<>();
 
     @SubscribeEvent
@@ -22,8 +25,8 @@ public class MacroRecorder {
         if (mc.thePlayer == null) return;
         GameSettings gs = mc.gameSettings;
 
-        float yawDelta = mc.thePlayer.rotationYaw - lastYaw;
-        float pitchDelta = mc.thePlayer.rotationPitch - lastPitch;
+        float currentYawDelta = mc.thePlayer.rotationYaw - lastYaw;
+        float currentPitchDelta = mc.thePlayer.rotationPitch - lastPitch;
 
         ArrayList<String> tickData = new ArrayList<>();
         tickData.add(String.valueOf(gs.keyBindForward.isKeyDown()));
@@ -34,8 +37,8 @@ public class MacroRecorder {
         tickData.add(String.valueOf(gs.keyBindSprint.isKeyDown()));
         tickData.add(String.valueOf(gs.keyBindSneak.isKeyDown()));
         tickData.add(String.valueOf(gs.keyBindUseItem.isKeyDown()));
-        tickData.add(String.valueOf(yawDelta));
-        tickData.add(String.valueOf(pitchDelta));
+        tickData.add(String.valueOf(pendingYawDelta));
+        tickData.add(String.valueOf(pendingPitchDelta));
 
         if (CommandMacro.isRecording) {
             CommandMacro.macro.add(tickData);
@@ -51,6 +54,9 @@ public class MacroRecorder {
         } else if (!clipBuffer.isEmpty()) {
             clipBuffer.clear();
         }
+
+        pendingYawDelta = currentYawDelta;
+        pendingPitchDelta = currentPitchDelta;
 
         lastYaw = mc.thePlayer.rotationYaw;
         lastPitch = mc.thePlayer.rotationPitch;

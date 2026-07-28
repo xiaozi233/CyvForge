@@ -12,6 +12,7 @@ import net.cyvforge.util.defaults.CyvCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 import net.cyvforge.event.events.MacroRecorder;
+import java.util.List;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -142,6 +143,15 @@ public class CommandMacro extends CyvCommand {
             e.printStackTrace();
             CyvForge.sendChatMessage("Macro file doesn't exist.");
         }
+    }
+
+    @Override
+    public List<String> getTabCompletions(String[] args) {
+        if (args.length == 2) return java.util.Arrays.asList("run", "record", "clip");
+        if (args.length == 3 && (args[1].equalsIgnoreCase("rec") || args[1].equalsIgnoreCase("record") || args[1].equalsIgnoreCase("recording"))) {
+            return java.util.Arrays.asList("start", "stop");
+        }
+        return new java.util.ArrayList<>();
     }
 
     public static void addToArray(boolean w, boolean a, boolean s, boolean d, boolean space, boolean sprint, boolean sneak, boolean rmb,  float yaw, float pitch) {

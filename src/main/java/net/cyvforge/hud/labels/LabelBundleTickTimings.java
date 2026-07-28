@@ -78,15 +78,30 @@ public class LabelBundleTickTimings extends LabelBundle {
         this.labels.add(new DraggableHUDElement() {
             public String getName() {return "labelRuntime";}
             public String getDisplayName() {return "Runtime";}
-            public int getWidth() {return getLabelWidth(getDisplayName());}
+            public int getWidth() {
+                if (CyvClientConfig.getBoolean("hideRuntimeLabelName", false)) {
+                    return mc.fontRendererObj.getStringWidth("000");
+                }
+                return getLabelWidth(getDisplayName());
+            }
             public int getHeight() {return getLabelHeight();}
             public ScreenPosition getDefaultPosition() {return new ScreenPosition(0, 92);}
             public void render(ScreenPosition pos) {
-            if (!this.isVisible) return;
-                renderLabel(pos, "Runtime: ", String.valueOf(ParkourTickListener.lastRunTime), true);
+                if (!this.isVisible) return;
+                int val = ParkourTickListener.lastRunTime;
+                boolean hideIfZero = CyvClientConfig.getBoolean("hideRuntimeIfZero", false);
+                boolean hideName = CyvClientConfig.getBoolean("hideRuntimeLabelName", false);
+
+                if (val == 0 && hideIfZero) return;
+
+                String prefix = hideName ? "" : "Runtime: ";
+
+                renderLabel(pos, prefix, String.valueOf(val), true);
             }
             public void renderDummy(ScreenPosition pos) {
-                renderLabel(pos, "Runtime: ", "0", this.isVisible);
+                boolean hideName = CyvClientConfig.getBoolean("hideRuntimeLabelName", false);
+                String prefix = hideName ? "" : "Runtime: ";
+                renderLabel(pos, prefix, "0", this.isVisible);
             }
         });
 

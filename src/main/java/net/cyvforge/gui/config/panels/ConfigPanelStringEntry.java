@@ -2,8 +2,8 @@ package net.cyvforge.gui.config.panels;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
-import net.cyvforge.gui.GuiModConfig;
 import net.cyvforge.gui.config.ConfigPanel;
+import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiTextField;
@@ -17,24 +17,24 @@ public class ConfigPanelStringEntry implements ConfigPanel {
     public String configOption;
     public String displayString;
     public final int index;
-    public GuiModConfig screenIn;
+    public CyvGui screenIn;
 
     private int xPosition;
     private int yPosition;
     private int sizeX;
     private int sizeY;
 
-    public ConfigPanelStringEntry(ArrayList<ConfigPanel> array, String configOption, String displayString, GuiModConfig screenIn) {
+    public ConfigPanelStringEntry(ArrayList<ConfigPanel> array, String configOption, String displayString, CyvGui screenIn) {
         this.index = array.size();
         this.displayString = displayString;
         this.configOption = configOption;
         this.screenIn = screenIn;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        this.sizeX = screenIn.sizeX - 20;
+        this.sizeX = screenIn.getSizeX() - 20;
         this.sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 3 / 2;
-        this.xPosition = sr.getScaledWidth() / 2 - screenIn.sizeX / 2 + 10;
-        this.yPosition = sr.getScaledHeight() / 2 - screenIn.sizeY / 2 + 10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
+        this.xPosition = sr.getScaledWidth() / 2 - screenIn.getSizeX() / 2 + 10;
+        this.yPosition = sr.getScaledHeight() / 2 - screenIn.getSizeY() / 2 + 10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
 
         this.field = new GuiTextField(0, Minecraft.getMinecraft().fontRendererObj, this.xPosition + this.sizeX / 2 + 2, this.yPosition + 2, this.sizeX / 2 - 4, this.sizeY - 4);
         this.field.setText(CyvClientConfig.getString(configOption, "Cyv"));
@@ -60,6 +60,16 @@ public class ConfigPanelStringEntry implements ConfigPanel {
     }
 
     @Override
+    public void setPos(int x, int y, int width) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.sizeX = width;
+        if (this.field != null) {
+            this.field.xPosition = this.xPosition + this.sizeX / 2 + 2;
+        }
+    }
+
+    @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseX >= this.xPosition + this.sizeX / 2 && mouseX <= this.xPosition + this.sizeX &&
                 mouseY >= this.yPosition && mouseY <= this.yPosition + this.sizeY) {
@@ -74,6 +84,8 @@ public class ConfigPanelStringEntry implements ConfigPanel {
         if (this.field.isFocused()) {
             this.field.textboxKeyTyped(typedChar, keyCode);
             CyvClientConfig.set(this.configOption, this.field.getText());
+
+            onValueChange();
 
             if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_ESCAPE) {
                 this.field.setFocused(false);

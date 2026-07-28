@@ -2,8 +2,8 @@ package net.cyvforge.gui.config.panels;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
-import net.cyvforge.gui.GuiModConfig;
 import net.cyvforge.gui.config.ConfigPanel;
+import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -15,7 +15,7 @@ public class ConfigPanelToggleModes implements ConfigPanel {
     public String configOption;
     public String displayString;
     public final int index;
-    public GuiModConfig screenIn;
+    public CyvGui screenIn;
 
     public final String s1, s2;
 
@@ -24,7 +24,7 @@ public class ConfigPanelToggleModes implements ConfigPanel {
     private int sizeX;
     private int sizeY;
 
-    public ConfigPanelToggleModes(ArrayList<ConfigPanel> array, String configOption, String displayString, String s1, String s2, GuiModConfig screenIn) {
+    public ConfigPanelToggleModes(ArrayList<ConfigPanel> array, String configOption, String displayString, String s1, String s2, CyvGui screenIn) {
         this.index = array.size();
         this.displayString = displayString;
         this.configOption = configOption;
@@ -34,10 +34,10 @@ public class ConfigPanelToggleModes implements ConfigPanel {
         this.s2 = s2;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        sizeX = screenIn.sizeX-20;
+        sizeX = screenIn.getSizeX()-20;
         sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT*3/2;
-        this.xPosition = sr.getScaledWidth()/2-screenIn.sizeX/2+10;
-        this.yPosition = sr.getScaledHeight()/2-screenIn.sizeY/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
+        this.xPosition = sr.getScaledWidth()/2-screenIn.getSizeX()/2+10;
+        this.yPosition = sr.getScaledHeight()/2-screenIn.getSizeY()/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
         this.sliderValue = CyvClientConfig.getBoolean(configOption, false);
 
     }
@@ -63,6 +63,13 @@ public class ConfigPanelToggleModes implements ConfigPanel {
         //amount
         GuiUtils.drawCenteredString(this.sliderValue ? s1 : s2, this.xPosition+this.sizeX*3/4, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
 
+    }
+
+    @Override
+    public void setPos(int x, int y, int width) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.sizeX = width;
     }
 
     @Override public int getIndex() {

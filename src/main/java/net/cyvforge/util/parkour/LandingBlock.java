@@ -1,11 +1,7 @@
 package net.cyvforge.util.parkour;
 
 import net.cyvforge.CyvForge;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockLadder;
-import net.minecraft.block.BlockSlime;
-import net.minecraft.block.BlockVine;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.AxisAlignedBB;
@@ -13,7 +9,6 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class LandingBlock {
 
@@ -103,7 +98,8 @@ public class LandingBlock {
         }
 
         //THIS IS TEMPORARY. I will find a better solution in the future
-        if (isBox && (block instanceof BlockLadder || block instanceof BlockVine || block instanceof BlockSlime)) {
+        if (isBox && (block instanceof BlockLadder || block instanceof BlockVine || block instanceof BlockSlime || block instanceof net.minecraft.block.BlockIce ||
+                block instanceof net.minecraft.block.BlockPackedIce)) {
             AxisAlignedBB playerHitbox = mc.thePlayer.getEntityBoundingBox();
 
             double playerX = playerHitbox.maxX - playerHitbox.minX;

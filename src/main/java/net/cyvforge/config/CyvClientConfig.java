@@ -45,6 +45,9 @@ public class CyvClientConfig {
         configFields.put("turnHUDAngleMin", new ConfigValue<Integer>(1));
         configFields.put("turnHUDAngleMax", new ConfigValue<Integer>(12));
         configFields.put("splitTurningHUD", new ConfigValue<Boolean>(false));
+        configFields.put("resetRunOnLand", new ConfigValue<Boolean>(false));
+        configFields.put("hideRuntimeIfZero", new ConfigValue<Boolean>(false));
+        configFields.put("hideRuntimeLabelName", new ConfigValue<Boolean>(false));
 
         // macros
         configFields.put("currentMacro", new ConfigValue<String>("macro"));

@@ -9,7 +9,9 @@ import net.minecraft.command.ICommandSender;
 public class CommandFullbright extends CyvCommand {
     public CommandFullbright() {
         super("fullbright");
+        this.hasArgs = false;
         this.helpString = "Toggles fullbright mode.";
+
         this.aliases.add("fb");
         this.aliases.add("bright");
     }

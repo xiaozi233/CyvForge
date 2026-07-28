@@ -2,8 +2,8 @@ package net.cyvforge.gui.config.panels;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
-import net.cyvforge.gui.GuiModConfig;
 import net.cyvforge.gui.config.ConfigPanel;
+import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -15,24 +15,24 @@ public class ConfigPanelToggle implements ConfigPanel {
     public String configOption;
     public String displayString;
     public final int index;
-    public GuiModConfig screenIn;
+    public CyvGui screenIn;
 
     private int xPosition;
     private int yPosition;
     private int sizeX;
     private int sizeY;
 
-    public ConfigPanelToggle(ArrayList<ConfigPanel> array, String configOption, String displayString, GuiModConfig screenIn) {
+    public ConfigPanelToggle(ArrayList<ConfigPanel> array, String configOption, String displayString, CyvGui screenIn) {
         this.index = array.size();
         this.displayString = displayString;
         this.configOption = configOption;
         this.screenIn = screenIn;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        sizeX = screenIn.sizeX-20;
+        sizeX = screenIn.getSizeX()-20;
         sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT*3/2;
-        this.xPosition = sr.getScaledWidth()/2-screenIn.sizeX/2+10;
-        this.yPosition = sr.getScaledHeight()/2-screenIn.sizeY/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
+        this.xPosition = sr.getScaledWidth()/2-screenIn.getSizeX()/2+10;
+        this.yPosition = sr.getScaledHeight()/2-screenIn.getSizeY()/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
         this.sliderValue = CyvClientConfig.getBoolean(configOption, false);
 
     }
@@ -58,6 +58,13 @@ public class ConfigPanelToggle implements ConfigPanel {
         //amount
         GuiUtils.drawCenteredString(" "+this.sliderValue, this.xPosition+this.sizeX*3/4, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
 
+    }
+
+    @Override
+    public void setPos(int x, int y, int width) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.sizeX = width;
     }
 
     @Override public int getIndex() {

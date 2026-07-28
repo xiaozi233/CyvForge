@@ -148,38 +148,47 @@ public class ParkourTickListener {
         calculateLastTiming();
         doCheckpoints();
 
-        boolean isAnyInput = gameSettings.keyBindForward.isKeyDown() || gameSettings.keyBindBack.isKeyDown() ||
-                gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown() ||
-                gameSettings.keyBindJump.isKeyDown() || gameSettings.keyBindSneak.isKeyDown();
+        boolean W = gameSettings.keyBindForward.isKeyDown();
+        boolean S = gameSettings.keyBindBack.isKeyDown();
+        boolean A = gameSettings.keyBindLeft.isKeyDown();
+        boolean D = gameSettings.keyBindRight.isKeyDown();
+        boolean Space = gameSettings.keyBindJump.isKeyDown();
+        boolean Sneak = gameSettings.keyBindSneak.isKeyDown();
 
-        boolean isWASD = gameSettings.keyBindForward.isKeyDown() || gameSettings.keyBindBack.isKeyDown() ||
-                gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown();
+        boolean hasEffectiveMovement = (W != S) || (A != D);
+        boolean isAnyInput = W || S || A || D || Space || Sneak;
 
         if (isAnyInput) hasInputtedSinceReset = true;
 
         if (hasInputtedSinceReset) {
-
             // runtime
-            if (mcPlayer.onGround) {
-                if (gameSettings.keyBindJump.isKeyDown()) {
-                    if (runCounter > 0) {
-                        lastRunTime = runCounter;
-                    }
+            if (lastTick != null && !lastTick.onGround && mcPlayer.onGround) {
+                if (CyvClientConfig.getBoolean("resetRunOnLand", false)) {
+                    lastRunTime = 0;
                     runCounter = 0;
                 }
-                else if (isWASD && lastTick != null && lastTick.onGround) {
-                    runCounter++;
+            }
+
+            if (lastTick != null && lastTick.onGround && !mcPlayer.onGround) {
+                if (runCounter > 0) {
                     lastRunTime = runCounter;
                 }
-                else {
-                    runCounter = 0;
-                }
-            } else {
                 runCounter = 0;
             }
 
+            if (mcPlayer.onGround) {
+                if (hasEffectiveMovement && !Space) {
+                    if (lastTick != null && lastTick.onGround) {
+                        runCounter++;
+                        lastRunTime = runCounter;
+                    }
+                } else {
+                    runCounter = 0;
+                }
+            }
+
             // stoptime
-            if (!isWASD) {
+            if (!hasEffectiveMovement) {
                 stopCounter++;
             } else {
                 if (stopCounter > 0) {
@@ -189,7 +198,7 @@ public class ParkourTickListener {
             }
 
             // waittime
-            if (mcPlayer.onGround && !isAnyInput && lastTick != null && lastTick.onGround) {
+            if (mcPlayer.onGround && !hasEffectiveMovement && !Space && !Sneak && lastTick != null && lastTick.onGround) {
                 waitCounter++;
             } else {
                 if (waitCounter > 0) lastWaitTime = waitCounter;

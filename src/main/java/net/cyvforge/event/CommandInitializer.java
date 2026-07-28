@@ -30,14 +30,14 @@ public class CommandInitializer  {
         }));
 
         cyvCommands.addAll(Arrays.asList(new CyvCommand[]{ //config commands
-                new CommandSetlb(), new CommandClearlb(), new CommandClearpb(), new CommandSetmm(), new CommandClearmm(),
+                new CommandSetlb(), new CommandClearlb(), new CommandSetmm(), new CommandClearmm(), new CommandClearpb(),
                 new CommandSetbox(), new CommandSetcond(), new CommandLb(), new CommandMm()
         }));
 
         cyvCommands.addAll(Arrays.asList(new CyvCommand[] { //mm commands
                 new CommandAirtime(), new CommandCalculate(), new CommandDistance(), new CommandHeight(),
-                new CommandSimulate(), new CommandSetSensitivity(), new CommandOptimizeSensitivity(), new CommandSimulate(),
-                new CommandCheckpoint(), new CommandGiveCheckpointGenerator()
+                new CommandSimulate(), new CommandSetSensitivity(), new CommandOptimizeSensitivity(), new CommandCheckpoint(),
+                new CommandGiveCheckpointGenerator()
         }));
 
         cyvCommands.add(new CommandMacro());

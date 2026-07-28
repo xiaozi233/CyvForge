@@ -2,8 +2,8 @@ package net.cyvforge.gui.config.panels;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.config.CyvClientConfig;
-import net.cyvforge.gui.GuiModConfig;
 import net.cyvforge.gui.config.ConfigPanel;
+import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -18,14 +18,14 @@ public class ConfigPanelIntegerSlider implements ConfigPanel {
     public final int minValue;
     private final int maxValue;
     public final int index;
-    public GuiModConfig screenIn;
+    public CyvGui screenIn;
 
     private int xPosition;
     private int yPosition;
     private int sizeX;
     private int sizeY;
 
-    public ConfigPanelIntegerSlider(ArrayList<ConfigPanel> array, String configOption, String displayString, int minValue, int maxValue, GuiModConfig screenIn) {
+    public ConfigPanelIntegerSlider(ArrayList<ConfigPanel> array, String configOption, String displayString, int minValue, int maxValue, CyvGui screenIn) {
         this.index = array.size();
         this.minValue = minValue;
         this.maxValue = maxValue;
@@ -34,13 +34,12 @@ public class ConfigPanelIntegerSlider implements ConfigPanel {
         this.screenIn = screenIn;
 
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        sizeX = screenIn.sizeX-20;
+        sizeX = screenIn.getSizeX()-20;
         sizeY = Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT*3/2;
-        this.xPosition = sr.getScaledWidth()/2-screenIn.sizeX/2+10;
-        this.yPosition = sr.getScaledHeight()/2-screenIn.sizeY/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
+        this.xPosition = sr.getScaledWidth()/2-screenIn.getSizeX()/2+10;
+        this.yPosition = sr.getScaledHeight()/2-screenIn.getSizeY()/2+10 + (index * Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2);
         this.sliderValue = CyvClientConfig.getInt(configOption, 0);
-        MathHelper.clamp_int(this.sliderValue, minValue, maxValue);
-
+        this.sliderValue = MathHelper.clamp_int(this.sliderValue, minValue, maxValue);
     }
 
     @Override
@@ -58,7 +57,6 @@ public class ConfigPanelIntegerSlider implements ConfigPanel {
             sliderColor = CyvForge.theme.mainBase();
         }
 
-
         //text label
         GuiUtils.drawString(this.displayString, this.xPosition, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
         //bg
@@ -69,6 +67,13 @@ public class ConfigPanelIntegerSlider implements ConfigPanel {
         //amount
         GuiUtils.drawCenteredString(" "+this.sliderValue, this.xPosition+this.sizeX*3/4, this.yPosition+this.sizeY/2-Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT/2+1-scroll, textColor, active);
 
+    }
+
+    @Override
+    public void setPos(int x, int y, int width) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.sizeX = width;
     }
 
     @Override public int getIndex() {
@@ -94,8 +99,9 @@ public class ConfigPanelIntegerSlider implements ConfigPanel {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        // TODO Auto-generated method stub
-
+        if (mouseInBounds(mouseX, mouseY) && mouseButton == 0) {
+            mouseDragged(mouseX, mouseY);
+        }
     }
 
 
