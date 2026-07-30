@@ -74,7 +74,6 @@ public class CyvForge {
 		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
 		MinecraftForge.EVENT_BUS.register(new MacroListener());
 		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());
-		MinecraftForge.EVENT_BUS.register(new pHandler());
 
 		LogManager.getLogger().info("CyvForge mod initialized!");
 
