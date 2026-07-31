@@ -7,11 +7,16 @@ import net.cyvforge.discord.DiscordRPCEventManager;
 import net.cyvforge.discord.DiscordRPCHandler;
 import net.cyvforge.event.CommandInitializer;
 import net.cyvforge.event.ConfigLoader;
+import net.cyvforge.event.events.ChatSuggestionsHandler;
 import net.cyvforge.event.events.GuiHandler;
 import net.cyvforge.event.events.KeyInputHandler;
 import net.cyvforge.event.events.MacroListener;
+import net.cyvforge.event.events.MacroRecorder;
 import net.cyvforge.event.events.ParkourTickListener;
+import net.cyvforge.event.events.SignCommandListener;
 import net.cyvforge.hud.HUDManager;
+import net.cyvforge.keybinding.ChatMacro.ChatMacroListener;
+import net.cyvforge.keybinding.ChatMacro.ChatMacroManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -57,23 +62,23 @@ public class CyvForge {
 
 		MinecraftForge.EVENT_BUS.register(new KeyInputHandler());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
-		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.ChatSuggestionsHandler());
+		MinecraftForge.EVENT_BUS.register(new ChatSuggestionsHandler());
+		MinecraftForge.EVENT_BUS.register(new MacroRecorder());
 
-		net.cyvforge.keybinding.ChatMacro.ChatMacroManager.load();
-		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.SignCommandListener());
-		MinecraftForge.EVENT_BUS.register(new net.cyvforge.event.events.MacroRecorder());
+		ChatMacroManager.load();
+		CommandInitializer.register(); //register mod commands
+
+		MinecraftForge.EVENT_BUS.register(new MacroListener());
+		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
+		MinecraftForge.EVENT_BUS.register(new SignCommandListener());
+		MinecraftForge.EVENT_BUS.register(new ChatMacroListener());
+		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());
 
 		if (CyvClientConfig.getBoolean("fullbright", true)) {
 			Minecraft.getMinecraft().gameSettings.gammaSetting = 1000f;
 		} else {
 			Minecraft.getMinecraft().gameSettings.gammaSetting = 1.0f;
 		}
-
-
-		CommandInitializer.register(); //register mod commands
-		MinecraftForge.EVENT_BUS.register(new ParkourTickListener());
-		MinecraftForge.EVENT_BUS.register(new MacroListener());
-		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());
 
 		LogManager.getLogger().info("CyvForge mod initialized!");
 

@@ -4,10 +4,8 @@ import net.cyvforge.CyvForge;
 import net.cyvforge.gui.GuiMPK;
 import net.cyvforge.util.GuiUtils;
 import net.cyvforge.util.defaults.CyvGui;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
@@ -77,7 +75,13 @@ public class GuiChatMacro extends CyvGui {
                 keyName = "NONE";
             } else {
                 List<String> names = new ArrayList<>();
-                for (Integer code : hk.keyCodes) names.add(Keyboard.getKeyName(code));
+                for (Integer code : hk.keyCodes) {
+                    if (code >= 1000) {
+                        names.add("Mouse" + (code - 1000 + 1));
+                    } else {
+                        names.add(Keyboard.getKeyName(code));
+                    }
+                }
                 keyName = String.join("+", names);
                 if (keyName.length() > 16) keyName = keyName.substring(0, 13) + "...";
             }

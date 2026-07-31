@@ -70,7 +70,7 @@ public class ChatSuggestionsHandler {
         int keyCode = Keyboard.getEventKey();
         if (!Keyboard.getEventKeyState()) return;
 
-        if (keyCode == Keyboard.KEY_TAB || keyCode == Keyboard.KEY_DOWN || keyCode == Keyboard.KEY_UP) {
+        if (keyCode == Keyboard.KEY_TAB) {
 
             boolean hasClickable = false;
             for (Suggestion s : currentSuggestions) if (!s.isHint) hasClickable = true;

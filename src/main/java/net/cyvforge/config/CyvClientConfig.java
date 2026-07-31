@@ -52,6 +52,7 @@ public class CyvClientConfig {
         // macros
         configFields.put("currentMacro", new ConfigValue<String>("macro"));
         configFields.put("smoothMacro", new ConfigValue<Boolean>(false));
+        configFields.put("macroHUDColor", new ConfigValue<String>("Default"));
         configFields.put("macroClipEnabled", new ConfigValue<Boolean>(false));
         configFields.put("macroClipTicks", new ConfigValue<Integer>(100));
 
