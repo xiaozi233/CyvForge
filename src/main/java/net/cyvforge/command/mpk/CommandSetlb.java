@@ -18,8 +18,8 @@ import java.util.List;
 public class CommandSetlb extends CyvCommand {
     public CommandSetlb() {
         super("setlb");
-        hasArgs = true;
-        usage = "[arguments]";
+        this.hasArgs = true;
+        this.usage = "[arguments]";
         this.helpString = "Set landing block";
     }
 
@@ -50,8 +50,8 @@ public class CommandSetlb extends CyvCommand {
                 else if (s.equals("box")) box = true;
                 else if (s.equals("target")) target = true;
                 //shortcuts
-                else if (s.equals("slime")) { box = true; mode = LandingMode.hit; }
-                else if (s.equals("ladder") || s.equals("vine") ) { box = true; mode = LandingMode.enter; }
+                else if (s.equals("slime") || s.equals("ice") || s.equals("slime/ice")) { box = true; mode = LandingMode.hit; }
+                else if (s.equals("ladder") || s.equals("vine") || s.equals("ladder/vine") ) { box = true; mode = LandingMode.enter; }
 
                 if (s.startsWith("tick") || s.startsWith("tier")) {
                     try {
@@ -123,5 +123,10 @@ public class CommandSetlb extends CyvCommand {
             ParkourTickListener.landingBlock.targetTick = targetTick;
             if (targetTick != -1) CyvForge.sendChatMessage("Target tick/tier set to: " + targetTick);
         }, "Set landing block").start();
+    }
+
+    @Override
+    public List<String> getTabCompletions(String[] args) {
+        return java.util.Arrays.asList("target", "box", "hit", "enter", "x", "z", "zneo", "xneo", "tick", "ladder/vine", "slime/ice");
     }
 }

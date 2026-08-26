@@ -13,5 +13,7 @@ public interface ConfigPanel {
     public default void unselect() {}
 
     public default void onValueChange() {}
-
+    default boolean isEnabled() { return true; }
+    default int getIndex() { return 0; }
+    void setPos(int x, int y, int width);
 }

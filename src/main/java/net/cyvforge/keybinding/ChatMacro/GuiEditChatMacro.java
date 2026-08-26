@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
+import java.util.List;
 
 public class GuiEditChatMacro extends CyvGui {
     private final ChatMacro hk;
@@ -67,11 +67,25 @@ public class GuiEditChatMacro extends CyvGui {
 
         String keysDisplay;
         if (listening && hk.keyCodes.isEmpty()) {
-            keysDisplay = "Press any keys...";
+            keysDisplay = "Press any keys/mouse...";
         } else {
-            keysDisplay = hk.keyCodes.isEmpty() ? "NONE (Click to bind)" :
-                    hk.keyCodes.stream().map(Keyboard::getKeyName).collect(Collectors.joining(" + "));
-            if (keysDisplay.length() > 32) keysDisplay = keysDisplay.substring(0, 29) + "...";
+            if (hk.keyCodes.isEmpty()) {
+                keysDisplay = "NONE (Click to bind)";
+            } else {
+                List<String> names = new ArrayList<>();
+                for (Integer code : hk.keyCodes) {
+                    if (code >= 1000) {
+                        names.add("Mouse" + (code - 1000 + 1));
+                    } else {
+                        names.add(Keyboard.getKeyName(code));
+                    }
+                }
+                keysDisplay = String.join(" + ", names);
+
+                if (keysDisplay.length() > 32) {
+                    keysDisplay = keysDisplay.substring(0, 29) + "...";
+                }
+            }
         }
 
         int fieldY = y + 98 + dynamicOffset;
@@ -107,7 +121,19 @@ public class GuiEditChatMacro extends CyvGui {
 
         if (listening) {
             boolean anyDown = false;
-            for (int code : hk.keyCodes) { if (Keyboard.isKeyDown(code)) { anyDown = true; break; } }
+            for (int code : hk.keyCodes) {
+                if (code >= 1000) {
+                    if (org.lwjgl.input.Mouse.isButtonDown(code - 1000)) {
+                        anyDown = true;
+                        break;
+                    }
+                } else {
+                    if (org.lwjgl.input.Keyboard.isKeyDown(code)) {
+                        anyDown = true;
+                        break;
+                    }
+                }
+            }
             lastAnyKeyDown = anyDown;
         }
     }
@@ -145,33 +171,52 @@ public class GuiEditChatMacro extends CyvGui {
         int x = width / 2 - 110;
         int y = height / 2 - 85;
         int dynamicOffset = hk.isChain ? 0 : -43;
-
         int fieldY = y + 98 + dynamicOffset;
-        if (mx >= x + 10 && mx <= x + 210 && my >= fieldY && my <= fieldY + 16) {
-            listening = true; hk.keyCodes.clear(); lastAnyKeyDown = false; return;
-        }
-        listening = false;
 
-        int buttonsY = y + 128 + dynamicOffset;
-        int btnWidth = 95;
-        if (mx >= x + 10 && mx <= x + 10 + btnWidth && my >= buttonsY && my <= buttonsY + 15) {
-            hk.isClient = !hk.isClient; return;
-        }
-        if (mx >= x + 115 && mx <= x + 115 + btnWidth && my >= buttonsY && my <= buttonsY + 15) {
-            hk.isChain = !hk.isChain; return;
-        }
-        if (hk.isChain) {
-            int modeY = buttonsY + 25;
-            if (mx >= x + 10 && mx <= x + 210 && my >= modeY && my <= modeY + 15) {
-                hk.isLink = !hk.isLink; return;
+        if (btn == 0 || btn == 1) {
+            if (mx >= x + 10 && mx <= x + 210 && my >= fieldY && my <= fieldY + 16) {
+                listening = true; hk.keyCodes.clear(); lastAnyKeyDown = false; return;
+            } else {
+                listening = false;
             }
         }
 
-        int windowHeight = hk.isChain ? 220 : 150;
-        int doneX = width / 2 - 40;
-        int doneY = y + windowHeight - 25;
-        if (mx >= doneX && mx <= doneX + 80 && my >= doneY && my <= doneY + 16) {
-            saveAndExit();
+        if (listening && btn > 1) {
+            int mouseId = 1000 + btn;
+
+            if (!lastAnyKeyDown && !hk.keyCodes.isEmpty()) {
+                hk.keyCodes.clear();
+            }
+
+            if (!hk.keyCodes.contains(mouseId)) {
+                hk.keyCodes.add(mouseId);
+            }
+            lastAnyKeyDown = true;
+            return;
+        }
+
+        if (btn == 0 || btn == 1) {
+            int buttonsY = y + 128 + dynamicOffset;
+            int btnWidth = 95;
+            if (mx >= x + 10 && mx <= x + 10 + btnWidth && my >= buttonsY && my <= buttonsY + 15) {
+                hk.isClient = !hk.isClient; return;
+            }
+            if (mx >= x + 115 && mx <= x + 115 + btnWidth && my >= buttonsY && my <= buttonsY + 15) {
+                hk.isChain = !hk.isChain; return;
+            }
+            if (hk.isChain) {
+                int modeY = buttonsY + 25;
+                if (mx >= x + 10 && mx <= x + 210 && my >= modeY && my <= modeY + 15) {
+                    hk.isLink = !hk.isLink; return;
+                }
+            }
+
+            int windowHeight = hk.isChain ? 220 : 150;
+            int doneX = width / 2 - 40;
+            int doneY = y + windowHeight - 25;
+            if (mx >= doneX && mx <= doneX + 80 && my >= doneY && my <= doneY + 16) {
+                saveAndExit();
+            }
         }
     }
 

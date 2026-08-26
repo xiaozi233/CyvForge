@@ -13,8 +13,8 @@ public class CommandResetGui extends CyvCommand {
         this.hasArgs = false;
         this.helpString = "Resets all HUD labels to their default positions.";
 
-        aliases.add("guireset");
-        aliases.add("resetlabels");
+        this.aliases.add("guireset");
+        this.aliases.add("resetlabels");
     }
 
     @Override
@@ -34,7 +34,7 @@ public class CommandResetGui extends CyvCommand {
 
         } catch (Exception e) {
             e.printStackTrace();
-            CyvForge.sendChatMessage("§cAn error occurred while resetting the GUI.");
+            CyvForge.sendChatMessage("An error occurred while resetting the GUI.");
         }
     }
 }
