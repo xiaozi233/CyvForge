@@ -519,19 +519,19 @@ public class ParkourTickListener {
                     && (lastTiming.contains("Pessi") || !locked)) {
                 long diff = Math.abs(moveTimestamp - jumpTimestamp) / 1000000;
                 String msTxt = (showMS && diff < 500) ? " (" + diff + "ms)" : "";
+                int t = lastJumpTime + 1;
 
                 //trafe: W and A/D pressed together on the pessi tick; named by that
                 //press tick, releasing A/D later does not change the label
                 if (gameSettings.keyBindForward.isKeyDown()
                         && (gameSettings.keyBindLeft.isKeyDown() || gameSettings.keyBindRight.isKeyDown())) {
-                    int t = lastJumpTime + 1;
 
-                    if (t == 1) lastTiming = "Strafe Max Pessi";
-                    else lastTiming = "Strafe " + t + "t Pessi" + msTxt;
+                    if (t == 1) lastTiming = "Max Strafe Pessi";
+                    else lastTiming = "Strafe Pessi" + t + " ticks" + msTxt;
 
                 } else {
-                    if ((lastJumpTime+1) == 1) lastTiming = "Max Pessi";
-                    else lastTiming = "Pessi " + (lastJumpTime+1) + " ticks";
+                    if (t == 1) lastTiming = "Max Pessi";
+                    else lastTiming = "Pessi " + t + " ticks";
                     lastTiming = lastTiming + msTxt;
                 }
                 locked = true;
