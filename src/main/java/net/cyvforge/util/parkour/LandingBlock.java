@@ -98,13 +98,13 @@ public class LandingBlock {
         }
 
         //THIS IS TEMPORARY. I will find a better solution in the future
-        if (isBox && (block instanceof BlockLadder || block instanceof BlockVine || block instanceof BlockSlime || block instanceof net.minecraft.block.BlockIce ||
+        if (isBox && (block instanceof BlockLadder || block instanceof BlockVine || block instanceof BlockSlime || block instanceof BlockIce ||
                 block instanceof net.minecraft.block.BlockPackedIce)) {
             AxisAlignedBB playerHitbox = mc.thePlayer.getEntityBoundingBox();
 
             double playerX = playerHitbox.maxX - playerHitbox.minX;
             double playerZ = playerHitbox.maxZ - playerHitbox.minZ;
-            AxisAlignedBB box = new AxisAlignedBB(playerX/2 + pos.getX(), pos.getY(), playerZ/2 + pos.getZ(),
+            AxisAlignedBB box = new AxisAlignedBB(playerX/2 + pos.getX(), pos.getY() - 0.02, playerZ/2 + pos.getZ(),
                     1-playerX/2 + pos.getX(), 1 + pos.getY(), 1-playerZ/2 + pos.getZ());
             this.bb = new AxisAlignedBB[] {box};
 
@@ -192,6 +192,10 @@ public class LandingBlock {
 
         xMinWall = null; xMaxWall = null; zMinWall = null; zMaxWall = null;
 
+        double playerHeight = playerHitbox.maxY - playerHitbox.minY;
+        double playerWidthX = playerHitbox.maxX - playerHitbox.minX;
+        double playerWidthZ = playerHitbox.maxZ - playerHitbox.minZ;
+
         for (AxisAlignedBB box : bb) {
             ArrayList<AxisAlignedBB> wallBoxes = new ArrayList<AxisAlignedBB>();
             BlockPos currentWallPos = null; //current x/z position of checked wall
@@ -199,14 +203,17 @@ public class LandingBlock {
 
             //z back
             currentWallPos = tempPos.north();
-            for (double i = 0; i < (playerHitbox.maxY - playerHitbox.minY); i++) {
+            for (double i = 0; i < playerHeight; i++) {
                 currentWallPos = currentWallPos.up();
                 wallBoxes.addAll(CyvForge.getHitbox(currentWallPos, world));
             }
             for (AxisAlignedBB wall : wallBoxes) {
                 if ((wall.maxX - wall.minX) < (box.maxX - box.minX)) continue; //skip if not wide enough
+                if (wall.maxY <= box.maxY) continue;
+                if (wall.minY >= box.maxY + playerHeight) continue;
+
                 currentWall = wall.maxZ;
-                offset = box.minZ - currentWall - (playerHitbox.maxZ - playerHitbox.minZ);
+                offset = box.minZ - currentWall - playerWidthZ;
 
                 if (offset < 0) {
                     if (zMinWall == null || currentWall > zMinWall) zMinWall = currentWall;
@@ -216,31 +223,37 @@ public class LandingBlock {
             //z front
             wallBoxes.clear();
             currentWallPos = tempPos.south();
-            for (double i = 0; i < (playerHitbox.maxY - playerHitbox.minY); i++) {
+            for (double i = 0; i < playerHeight; i++) {
                 currentWallPos = currentWallPos.up();
                 wallBoxes.addAll(CyvForge.getHitbox(currentWallPos, world));
             }
             for (AxisAlignedBB wall : wallBoxes) {
                 if ((wall.maxX - wall.minX) < (box.maxX - box.minX)) continue; //skip if not wide enough
+                if (wall.maxY <= box.maxY) continue;
+                if (wall.minY >= box.maxY + playerHeight) continue;
+
                 currentWall = wall.minZ;
-                offset = currentWall - box.maxZ - (playerHitbox.maxZ - playerHitbox.minZ);
+                offset = currentWall - box.maxZ - playerWidthZ;
 
                 if (offset < 0) {
-                    if (zMaxWall == null || currentWall > zMaxWall) zMaxWall = currentWall;
+                    if (zMaxWall == null || currentWall < zMaxWall) zMaxWall = currentWall;
                 }
             }
 
             //x right
             wallBoxes.clear();
             currentWallPos = tempPos.west();
-            for (double i = 0; i < (playerHitbox.maxY - playerHitbox.minY); i++) {
+            for (double i = 0; i < playerHeight; i++) {
                 currentWallPos = currentWallPos.up();
                 wallBoxes.addAll(CyvForge.getHitbox(currentWallPos, world));
             }
             for (AxisAlignedBB wall : wallBoxes) {
                 if ((wall.maxZ - wall.minZ) < (box.maxZ - box.minZ)) continue; //skip if not wide enough
+                if (wall.maxY <= box.maxY) continue;
+                if (wall.minY >= box.maxY + playerHeight) continue;
+
                 currentWall = wall.maxX;
-                offset = box.minX - currentWall - (playerHitbox.maxX - playerHitbox.minX);
+                offset = box.minX - currentWall - playerWidthX;
 
                 if (offset < 0) {
                     if (xMinWall == null || currentWall > xMinWall) xMinWall = currentWall;
@@ -250,17 +263,20 @@ public class LandingBlock {
             //x left
             wallBoxes.clear();
             currentWallPos = tempPos.east();
-            for (double i = 0; i < (playerHitbox.maxY - playerHitbox.minY); i++) {
+            for (double i = 0; i < playerHeight; i++) {
                 currentWallPos = currentWallPos.up();
                 wallBoxes.addAll(CyvForge.getHitbox(currentWallPos, world));
             }
             for (AxisAlignedBB wall : wallBoxes) {
                 if ((wall.maxZ - wall.minZ) < (box.maxZ - box.minZ)) continue; //skip if not wide enough
+                if (wall.maxY <= box.maxY) continue;
+                if (wall.minY >= box.maxY + playerHeight) continue;
+
                 currentWall = wall.minX;
-                offset = currentWall - box.maxX - (playerHitbox.maxX - playerHitbox.minX);
+                offset = currentWall - box.maxX - playerWidthX;
 
                 if (offset < 0) {
-                    if (xMaxWall == null || currentWall > xMaxWall) xMaxWall = currentWall;
+                    if (xMaxWall == null || currentWall < xMaxWall) xMaxWall = currentWall;
                 }
             }
 

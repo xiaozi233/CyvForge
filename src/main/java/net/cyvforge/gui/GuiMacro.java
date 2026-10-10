@@ -3,18 +3,16 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import net.cyvforge.CyvForge;
 import net.cyvforge.command.mpk.CommandMacro;
-import net.cyvforge.config.ColorTheme;
 import net.cyvforge.config.CyvClientConfig;
 import net.cyvforge.event.MacroFileInit;
-import net.cyvforge.event.events.GuiHandler;
 import net.cyvforge.util.defaults.CyvGui;
 import net.cyvforge.util.GuiUtils;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import com.google.gson.Gson;
@@ -30,6 +28,8 @@ public class GuiMacro extends CyvGui {
 //    int sizeX = 500;
 //    int sizeY = 300;
 
+    private boolean focusFileNameOnInit = false;
+
     SubButton addRow;
     SubButton duplicateRow;
     SubButton deleteRow;
@@ -37,8 +37,22 @@ public class GuiMacro extends CyvGui {
     GuiTextField fileName;
     SubButton loadFile;
 
-    public ArrayList<MacroLine> macroLines;
+    SubButton openList;
+
+    public java.util.List<MacroLine> macroLines;
     int selectedIndex = -1;
+    private int focusedColumn = 0;
+
+    private int renamingIndex = -1;
+    private GuiTextField renameField;
+
+    private MacroLine clipboard = null;
+    private final java.util.List<java.util.List<MacroLine>> undoStack = new java.util.ArrayList<>();
+    private static final int MAX_UNDO_STEPS = 50;
+
+    ArrayList<String> recentMacros = new ArrayList<>();
+
+    int deleteConfirmIndex = -1;
 
     float vScroll = 0;
     float scroll = 0;
@@ -76,8 +90,15 @@ public class GuiMacro extends CyvGui {
         try {
             MacroFileInit.swapFile(CyvClientConfig.getString("currentMacro", "macro"));
             Gson gson = new Gson();
-            JsonReader reader = new JsonReader(new FileReader(MacroFileInit.macroFile));
-            macro = gson.fromJson(reader, new ArrayList<ArrayList<String>>().getClass());
+
+            if (MacroFileInit.macroFile.exists()) {
+                try (FileReader fr = new FileReader(MacroFileInit.macroFile);
+                     JsonReader reader = new JsonReader(fr)) {
+                    macro = gson.fromJson(reader, new ArrayList<ArrayList<String>>().getClass());
+                }
+            } else {
+                macro = new ArrayList<ArrayList<String>>();
+            }
         } catch (Exception e) {
             macro = new ArrayList<ArrayList<String>>();
         }
@@ -103,12 +124,18 @@ public class GuiMacro extends CyvGui {
                         // transisition fix for when i added RMB
                         if (line.size() == 9) {
                             macroLine.rmb = false;
-                            macroLine.yawField.setText("" + Double.valueOf(line.get(7)));
-                            macroLine.pitchField.setText("" + Double.valueOf(line.get(8)));
+
+                            double yVal = Double.valueOf(line.get(7));
+                            double pVal = Double.valueOf(line.get(8));
+                            macroLine.yawField.setText(yVal == 0.0 ? "" : String.valueOf(yVal));
+                            macroLine.pitchField.setText(pVal == 0.0 ? "" : String.valueOf(pVal));
                         } else {
                             macroLine.rmb = Boolean.valueOf(line.get(7));
-                            macroLine.yawField.setText("" + Double.valueOf(line.get(8)));
-                            macroLine.pitchField.setText("" + Double.valueOf(line.get(9)));
+
+                            double yVal = Double.valueOf(line.get(8));
+                            double pVal = Double.valueOf(line.get(9));
+                            macroLine.yawField.setText(yVal == 0.0 ? "" : String.valueOf(yVal));
+                            macroLine.pitchField.setText(pVal == 0.0 ? "" : String.valueOf(pVal));
                         }
 
                         macroLines.add(macroLine);
@@ -118,16 +145,37 @@ public class GuiMacro extends CyvGui {
             } catch (Exception e) {}
         }
 
+        String rawRecent = CyvClientConfig.getString("recentMacros", "");
+        recentMacros.clear();
+        if (!rawRecent.isEmpty()) {
+            recentMacros.addAll(Arrays.asList(rawRecent.split(",")));
+        }
+
+        int recentX = (sr.getScaledWidth() + sizeY + 30) / 2 - 75;
+        int recentY = sr.getScaledHeight() / 2 - sizeY / 2 + 115;
+        this.openList = new SubButton("List", recentX + 90, recentY - 15);
+        this.openList.setSizeX(60);
+        this.openList.setEnabled(true);
+
         maxScroll = (int) Math.max(0, Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2 * Math.ceil(macroLines.size()) - (sizeY-20));
         if (scroll > maxScroll) scroll = maxScroll;
         if (scroll < 0) scroll = 0;
+
+        if (this.focusFileNameOnInit) {
+            this.fileName.setFocused(true);
+        }
+
+        this.renameField = new GuiTextField(9, fontRendererObj, 0, 0, 90, 12);
+        this.renameField.setEnableBackgroundDrawing(false);
+        this.renameField.setMaxStringLength(32);
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawDefaultBackground();
 
-        maxScroll = (int) Math.max(0, Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * 2 * Math.ceil(macroLines.size()) - (sizeY-20));
+        int listHeight = sizeY - 40;
+        maxScroll = (int) Math.max(0, (macroLines.size() * fontRendererObj.FONT_HEIGHT * 2) - listHeight);
         if (scroll > maxScroll) scroll = maxScroll;
         if (scroll < 0) scroll = 0;
 
@@ -137,12 +185,68 @@ public class GuiMacro extends CyvGui {
         this.addRow.draw(mouseX, mouseY);
         this.duplicateRow.draw(mouseX, mouseY);
         this.deleteRow.draw(mouseX, mouseY);
+        this.openList.draw(mouseX, mouseY);
 
         GuiUtils.drawRoundedRect((sr.getScaledWidth() + sizeY +30)/2 - 75, sr.getScaledHeight()/2 - sizeY/2 + 20,
                 (sr.getScaledWidth() + sizeY +30)/2 + 20, sr.getScaledHeight()/2 - sizeY/2 + 20 + fontRendererObj.FONT_HEIGHT*7/4,
                 3, CyvForge.theme.shade2);
         this.fileName.drawTextBox();
         this.loadFile.draw(mouseX, mouseY);
+
+        int recentX = (sr.getScaledWidth() + sizeY + 30) / 2 - 75;
+        int recentY = sr.getScaledHeight() / 2 - sizeY / 2 + 115;
+        int recentWidth = 150;
+
+        GuiUtils.drawString("Recent Macros:", recentX, recentY - 12, 0xFF7FB6C4, true);
+
+        for (int i = 0; i < recentMacros.size(); i++) {
+            String mName = recentMacros.get(i);
+            int rowY = recentY + (i * 18);
+
+            boolean rowHovered = mouseX >= recentX && mouseX <= recentX + recentWidth && mouseY >= rowY && mouseY <= rowY + 15;
+
+            GuiUtils.drawRoundedRect(recentX, rowY, recentX + recentWidth, rowY + 15, 2, rowHovered ? 0x60FFFFFF : 0x30000000);
+
+            if (renamingIndex == i) {
+                this.renameField.xPosition = recentX + 5;
+                this.renameField.yPosition = rowY + 4;
+                this.renameField.width = recentWidth - 65;
+                this.renameField.drawTextBox();
+            } else {
+                int maxTextWidth = recentWidth - 55;
+                String displayName = fontRendererObj.trimStringToWidth(mName, maxTextWidth);
+
+                if (fontRendererObj.getStringWidth(mName) > maxTextWidth) {
+                    displayName = fontRendererObj.trimStringToWidth(mName, maxTextWidth - 7) + "...";
+                }
+
+                fontRendererObj.drawString(displayName, recentX + 5, rowY + 4, 0xFFFFFFFF);
+            }
+            if (rowHovered || deleteConfirmIndex == i) {
+                int btnRenX = recentX + recentWidth - 54;  // R
+                int btnCopyX = recentX + recentWidth - 36; // C
+                int btnDelX = recentX + recentWidth - 18;  // X
+
+                if (deleteConfirmIndex == i) {
+                    boolean confirmHover = mouseX >= btnCopyX && mouseX <= btnDelX + 15 && mouseY >= rowY + 1 && mouseY <= rowY + 14;
+                    GuiUtils.drawRoundedRect(btnCopyX, rowY + 1, btnDelX + 15, rowY + 14, 2, confirmHover ? 0xFFFF0000 : 0xFFCC0000);
+                    fontRendererObj.drawString("Sure?", btnCopyX + 2, rowY + 4, 0xFFFFFFFF);
+                } else if (renamingIndex != i) {
+
+                    // R (Rename)
+                    boolean renameHover = mouseX >= btnRenX && mouseX <= btnRenX + 15 && mouseY >= rowY + 1 && mouseY <= rowY + 14;
+                    fontRendererObj.drawString("R", btnRenX + 5, rowY + 4, renameHover ? 0xFFFFAA00 : 0xAAFFFFFF);
+
+                    // C (Copy)
+                    boolean copyHover = mouseX >= btnCopyX && mouseX <= btnCopyX + 15 && mouseY >= rowY + 1 && mouseY <= rowY + 14;
+                    fontRendererObj.drawString("C", btnCopyX + 5, rowY + 4, copyHover ? 0xFF00FFFF : 0xAAFFFFFF);
+
+                    // X (Delete)
+                    boolean deleteHover = mouseX >= btnDelX && mouseX <= btnDelX + 15 && mouseY >= rowY + 1 && mouseY <= rowY + 14;
+                    fontRendererObj.drawString("X", btnDelX + 5, rowY + 4, deleteHover ? 0xFFFF0000 : 0xAAFFFFFF);
+                }
+            }
+        }
 
         this.addRow.setEnabled(true);
         if (this.selectedIndex > -1 && this.selectedIndex < this.macroLines.size()) {
@@ -203,14 +307,85 @@ public class GuiMacro extends CyvGui {
 
     @Override
     public void handleMouseInput() throws IOException {
-        int eventDWheel = GuiHandler.scrollBuffer;
-        GuiHandler.scrollBuffer = 0;
+        int eventDWheel = net.cyvforge.event.events.GuiHandler.scrollBuffer;
+        net.cyvforge.event.events.GuiHandler.scrollBuffer = 0;
 
-        if (eventDWheel != 0 && (!scrollClicked || !org.lwjgl.input.Mouse.isButtonDown(0))) {
+        if (eventDWheel != 0) {
             vScroll -= eventDWheel * 0.05;
         }
-
         super.handleMouseInput();
+    }
+
+    public static void addToRecent(String name) {
+        if (name == null || name.isEmpty()) return;
+
+        String raw = CyvClientConfig.getString("recentMacros", "");
+        ArrayList<String> list = new ArrayList<>();
+        if (!raw.isEmpty()) {
+            list.addAll(Arrays.asList(raw.split(",")));
+        }
+
+        list.remove(name);
+        list.add(0, name);
+
+        while (list.size() > 10) {
+            list.remove(list.size() - 1);
+        }
+        CyvClientConfig.set("recentMacros", String.join(",", list));
+        net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+    }
+
+    private void copyMacroFile(String originalName) {
+        try {
+            java.io.File folder = MacroFileInit.macroFile.getParentFile();
+            java.io.File source = new java.io.File(folder, originalName + ".json");
+            String newName = originalName + "-copy";
+            java.io.File dest = new java.io.File(folder, newName + ".json");
+
+            if (source.exists()) {
+                com.google.common.io.Files.copy(source, dest);
+                addToRecent(newName);
+                net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+
+                CyvClientConfig.set("currentMacro", newName);
+                mc.displayGuiScreen(new GuiMacro());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteMacroFile(String name) {
+        try {
+            java.io.File folder = MacroFileInit.macroFile.getParentFile();
+            java.io.File fileToDelete = new java.io.File(folder, name + ".json");
+
+            boolean isCurrent = CyvClientConfig.getString("currentMacro", "macro").equals(name);
+
+            if (isCurrent) {
+                CyvClientConfig.set("currentMacro", "macro");
+                MacroFileInit.swapFile("macro");
+            }
+
+            if (fileToDelete.exists()) {
+                if (fileToDelete.delete()) {
+                    System.out.println("Deleted file: " + name);
+                } else {
+                    fileToDelete.deleteOnExit();
+                    System.out.println("Failed to delete immediately, scheduled for exit: " + name);
+                }
+            }
+
+            recentMacros.remove(name);
+            CyvClientConfig.set("recentMacros", String.join(",", recentMacros));
+
+            net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+
+            mc.displayGuiScreen(new GuiMacro());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -235,33 +410,37 @@ public class GuiMacro extends CyvGui {
         int index=0;
         for (MacroLine l : macroLines) {
             if (l.isPressed(index, mouseX, mouseY, mouseEvent)) {
+                this.selectedIndex = index;
 
-                if (this.selectedIndex == index) {
-                    if (!l.pitchField.isFocused() && !l.yawField.isFocused()) {
-                        int keyCode = mouseEvent - 100;
-                        if (keyCode == mc.gameSettings.keyBindForward.getKeyCode()) {
-                            l.w = !l.w;
-                        } else if (keyCode == mc.gameSettings.keyBindLeft.getKeyCode()) {
-                            l.a = !l.a;
-                        } else if (keyCode == mc.gameSettings.keyBindBack.getKeyCode()) {
-                            l.s = !l.s;
-                        } else if (keyCode == mc.gameSettings.keyBindRight.getKeyCode()) {
-                            l.d = !l.d;
-                        } else if (keyCode == mc.gameSettings.keyBindJump.getKeyCode()) {
-                            l.jump = !l.jump;
-                        } else if (keyCode == mc.gameSettings.keyBindSprint.getKeyCode()) {
-                            l.sprint = !l.sprint;
-                        } else if (keyCode == mc.gameSettings.keyBindSneak.getKeyCode()) {
-                            l.sneak = !l.sneak;
-                        } else if (keyCode == mc.gameSettings.keyBindUseItem.getKeyCode()) {
-                            l.rmb = !l.rmb;
-                        }
-                    }
+                l.yawField.mouseClicked(mouseX, mouseY, mouseEvent);
+                l.pitchField.mouseClicked(mouseX, mouseY, mouseEvent);
+
+                if (l.yawField.isFocused()) {
+                    focusedColumn = 1;
+                } else if (l.pitchField.isFocused()) {
+                    focusedColumn = 2;
                 } else {
-                    this.selectedIndex = index;
-
+                    focusedColumn = 0;
+                    int keyCode = mouseEvent - 100;
+                    if (keyCode == mc.gameSettings.keyBindForward.getKeyCode()) {
+                        l.w = !l.w;
+                    } else if (keyCode == mc.gameSettings.keyBindLeft.getKeyCode()) {
+                        l.a = !l.a;
+                    } else if (keyCode == mc.gameSettings.keyBindBack.getKeyCode()) {
+                        l.s = !l.s;
+                    } else if (keyCode == mc.gameSettings.keyBindRight.getKeyCode()) {
+                        l.d = !l.d;
+                    } else if (keyCode == mc.gameSettings.keyBindJump.getKeyCode()) {
+                        l.jump = !l.jump;
+                    } else if (keyCode == mc.gameSettings.keyBindSprint.getKeyCode()) {
+                        l.sprint = !l.sprint;
+                    } else if (keyCode == mc.gameSettings.keyBindSneak.getKeyCode()) {
+                        l.sneak = !l.sneak;
+                    } else if (keyCode == mc.gameSettings.keyBindUseItem.getKeyCode()) {
+                        l.rmb = !l.rmb;
+                    }
                 }
-                l.mouseClicked(index, mouseX, mouseY, mouseEvent);
+                updateFocusAndScroll();
                 return;
             }
             index++;
@@ -302,9 +481,68 @@ public class GuiMacro extends CyvGui {
                 this.macroLines.remove(selectedIndex);
             } catch (Exception e) {}
         } else if (this.loadFile.clicked(mouseX, mouseY, mouseEvent)) {
-            CyvClientConfig.set("currentMacro", this.fileName.getText());
+            String name = this.fileName.getText();
+            addToRecent(name);
+            CyvClientConfig.set("currentMacro", name);
+            net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
             mc.displayGuiScreen(new GuiMacro());
+            return;
+        } else if (this.openList.clicked(mouseX, mouseY, mouseEvent)) {
+            mc.displayGuiScreen(new GuiMacroList(this));
+            return;
         }
+
+        int rX = (sr.getScaledWidth() + sizeY + 30) / 2 - 75;
+        int rY = sr.getScaledHeight() / 2 - sizeY / 2 + 115;
+        int rVisHeight = sizeY - 125;
+        int rWidth = 150;
+
+        for (int i = 0; i < recentMacros.size(); i++) {
+            int rowY = rY + (i * 18);
+
+            if (mouseY >= rY && mouseY <= rY + rVisHeight) {
+                if (mouseX >= rX && mouseX <= rX + rWidth && mouseY >= rowY && mouseY <= rowY + 15) {
+                    int btnRenX = rX + rWidth - 54;
+                    int btnCopyX = rX + rWidth - 36;
+                    int btnDelX = rX + rWidth - 18;
+
+                    if (deleteConfirmIndex == i) {
+                        if (mouseX >= btnCopyX && mouseX <= btnDelX + 15) {
+                            deleteMacroFile(recentMacros.get(i));
+                            deleteConfirmIndex = -1;
+                        } else {
+                            deleteConfirmIndex = -1;
+                        }
+                        return;
+                    }
+
+                    if (mouseX >= btnRenX && mouseX <= btnRenX + 15 && deleteConfirmIndex == -1) {
+                        this.renamingIndex = i;
+                        this.renameField.setText(recentMacros.get(i));
+                        this.renameField.setFocused(true);
+                        return;
+                    }
+
+                    if (mouseX >= btnCopyX && mouseX <= btnCopyX + 15) {
+                        copyMacroFile(recentMacros.get(i));
+                        return;
+                    }
+
+                    if (mouseX >= btnDelX && mouseX <= btnDelX + 15) {
+                        deleteConfirmIndex = i;
+                        return;
+                    }
+
+                    String selectedMacro = recentMacros.get(i);
+                    addToRecent(selectedMacro);
+                    CyvClientConfig.set("currentMacro", selectedMacro);
+                    net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+                    mc.displayGuiScreen(new GuiMacro());
+                    return;
+                }
+            }
+        }
+        deleteConfirmIndex = -1;
 
     }
 
@@ -325,19 +563,152 @@ public class GuiMacro extends CyvGui {
 
     @Override
     public void keyTyped(char typedChar, int keyCode) throws IOException {
-        super.keyTyped(typedChar, keyCode);
+        if (this.renamingIndex != -1) {
+            if (keyCode == Keyboard.KEY_ESCAPE) {
+                this.renamingIndex = -1;
+                return;
+            }
+            if (keyCode == Keyboard.KEY_RETURN) {
+                confirmRename();
+                return;
+            }
+            this.renameField.textboxKeyTyped(typedChar, keyCode);
+            return;
+        }
+
+        if (keyCode == Keyboard.KEY_ESCAPE) {
+            mc.displayGuiScreen(null);
+            return;
+        }
 
         if (this.fileName.isFocused()) {
+            if (keyCode == Keyboard.KEY_RETURN) {
+                String name = this.fileName.getText();
+                if (!name.isEmpty()) {
+                    addToRecent(name);
+                    net.cyvforge.config.CyvClientConfig.set("currentMacro", name);
+                    GuiMacro nextGui = new GuiMacro();
+                    nextGui.focusFileNameOnInit = true;
+                    mc.displayGuiScreen(nextGui);
+                }
+                return;
+            }
             this.fileName.textboxKeyTyped(typedChar, keyCode);
             return;
+        }
+
+        boolean requireMod = CyvClientConfig.getBoolean("macroShortcutsRequireMod", true);
+        boolean isMod = Keyboard.isKeyDown(Keyboard.KEY_LMENU) ||
+                Keyboard.isKeyDown(Keyboard.KEY_RMENU) ||
+                Keyboard.isKeyDown(Keyboard.KEY_TAB);
+
+        boolean isCtrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+
+        if (isMod && selectedIndex == -1 && !macroLines.isEmpty()) {
+            selectedIndex = 0;
+            focusedColumn = 0;
+            updateFocusAndScroll();
+        }
+
+        boolean anyFieldFocused = false;
+        if (selectedIndex != -1 && selectedIndex < macroLines.size()) {
+            MacroLine l = macroLines.get(selectedIndex);
+            if (l.yawField.isFocused() || l.pitchField.isFocused()) anyFieldFocused = true;
+        }
+
+        if (!isCtrl && (isMod || (!requireMod && !anyFieldFocused))) {
+            if (keyCode == Keyboard.KEY_Z) { // Alt+Z = Undo
+                undo();
+                return;
+            }
+            if (keyCode == Keyboard.KEY_B) { // Alt+B = Add
+                saveState();
+                int insertAt = (selectedIndex == -1) ? macroLines.size() : selectedIndex + 1;
+                macroLines.add(insertAt, new MacroLine());
+                selectedIndex = insertAt;
+                focusedColumn = 0;
+                updateFocusAndScroll();
+                return;
+            }
+
+            if (selectedIndex != -1 && selectedIndex < macroLines.size()) {
+                if (keyCode == Keyboard.KEY_C) { // Alt+C = Copy
+                    this.clipboard = cloneLine(macroLines.get(selectedIndex));
+                    return;
+                }
+                if (keyCode == Keyboard.KEY_X) { // Alt+X = Cut
+                    saveState();
+                    macroLines.remove(selectedIndex);
+                    if (selectedIndex >= macroLines.size()) selectedIndex = macroLines.size() - 1;
+                    updateFocusAndScroll();
+                    return;
+                }
+                if (keyCode == Keyboard.KEY_V) { // Alt+V = Paste
+                    if (clipboard != null) {
+                        saveState();
+                        macroLines.add(selectedIndex + 1, cloneLine(clipboard));
+                        selectedIndex++;
+                        updateFocusAndScroll();
+                    }
+                    return;
+                }
+            }
+        }
+
+        if (selectedIndex != -1) {
+            if (keyCode == Keyboard.KEY_UP || (isMod && keyCode == Keyboard.KEY_W)) {
+                if (selectedIndex > 0) {
+                    selectedIndex--;
+                    updateFocusAndScroll();
+                }
+                return;
+            }
+            if (keyCode == Keyboard.KEY_DOWN || (isMod && keyCode == Keyboard.KEY_S)) {
+                if (selectedIndex < macroLines.size() - 1) {
+                    selectedIndex++;
+                    updateFocusAndScroll();
+                }
+                return;
+            }
+            if ((!isMod && keyCode == Keyboard.KEY_LEFT) || (isMod && keyCode == Keyboard.KEY_A)) {
+                if (focusedColumn > 0) {
+                    focusedColumn--;
+                    updateFocusAndScroll();
+                    return;
+                }
+            }
+
+            if ((!isMod && keyCode == Keyboard.KEY_RIGHT) || (isMod && keyCode == Keyboard.KEY_D)) {
+                if (focusedColumn < 2) {
+                    focusedColumn++;
+                    updateFocusAndScroll();
+                    return;
+                }
+            }
         }
 
         if (this.selectedIndex > -1 && this.selectedIndex < macroLines.size()) {
             MacroLine l = this.macroLines.get(this.selectedIndex);
 
-            if (l.yawField.isFocused()) l.yawField.textboxKeyTyped(typedChar, keyCode);
-            else if (l.pitchField.isFocused()) l.pitchField.textboxKeyTyped(typedChar, keyCode);
-            else {
+            if (l.yawField.isFocused() || l.pitchField.isFocused()) {
+                GuiTextField activeField = l.yawField.isFocused() ? l.yawField : l.pitchField;
+
+                if (isCtrl) {
+                    activeField.textboxKeyTyped(typedChar, keyCode);
+                    return;
+                }
+
+                boolean isNumber = (typedChar >= '0' && typedChar <= '9');
+                boolean isSymbol = (typedChar == '.' || typedChar == '-');
+                boolean isControl = (keyCode == Keyboard.KEY_BACK || keyCode == Keyboard.KEY_DELETE ||
+                        keyCode == Keyboard.KEY_LEFT || keyCode == Keyboard.KEY_RIGHT ||
+                        keyCode == Keyboard.KEY_HOME || keyCode == Keyboard.KEY_END);
+
+                if (isNumber || isSymbol || isControl) {
+                    activeField.textboxKeyTyped(typedChar, keyCode);
+                }
+                return;
+            } else if (focusedColumn == 0 && !isMod) {
                 if (keyCode == mc.gameSettings.keyBindForward.getKeyCode()) {
                     l.w = !l.w;
                 } else if (keyCode == mc.gameSettings.keyBindLeft.getKeyCode()) {
@@ -360,8 +731,97 @@ public class GuiMacro extends CyvGui {
         }
     }
 
+    private void confirmRename() {
+        if (renamingIndex == -1) return;
+
+        String oldName = recentMacros.get(renamingIndex);
+        String newName = renameField.getText().trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
+
+        if (!newName.isEmpty() && !newName.equals(oldName)) {
+            try {
+                java.io.File folder = MacroFileInit.macroFile.getParentFile();
+                java.io.File oldFile = new java.io.File(folder, oldName + ".json");
+                java.io.File newFile = new java.io.File(folder, newName + ".json");
+
+                if (oldFile.exists() && !newFile.exists()) {
+                    if (oldFile.renameTo(newFile)) {
+                        recentMacros.set(renamingIndex, newName);
+                        CyvClientConfig.set("recentMacros", String.join(",", recentMacros));
+
+                        if (CyvClientConfig.getString("currentMacro", "macro").equals(oldName)) {
+                            CyvClientConfig.set("currentMacro", newName);
+                            MacroFileInit.swapFile(newName);
+                        }
+                        net.cyvforge.event.ConfigLoader.save(CyvForge.config, false);
+                    }
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+        this.renamingIndex = -1;
+    }
+
+    private void updateFocusAndScroll() {
+        if (selectedIndex == -1) return;
+
+        for (int i = 0; i < macroLines.size(); i++) {
+            MacroLine line = macroLines.get(i);
+            if (i == selectedIndex) {
+                line.yawField.setFocused(focusedColumn == 1);
+                line.pitchField.setFocused(focusedColumn == 2);
+            } else {
+                line.yawField.setFocused(false);
+                line.pitchField.setFocused(false);
+            }
+        }
+
+        int rowHeight = fontRendererObj.FONT_HEIGHT * 2;
+        int listHeight = sizeY - 40;
+        int selectedY = (selectedIndex + 1) * rowHeight;
+
+        if (selectedY - scroll < rowHeight) {
+            scroll = selectedY - rowHeight;
+        }
+        else if (selectedY - scroll > listHeight) {
+            scroll = selectedY - listHeight;
+        }
+    }
+
+    private MacroLine cloneLine(MacroLine original) {
+        MacroLine newLine = new MacroLine();
+        newLine.w = original.w; newLine.a = original.a;
+        newLine.s = original.s; newLine.d = original.d;
+        newLine.jump = original.jump; newLine.sprint = original.sprint;
+        newLine.sneak = original.sneak; newLine.rmb = original.rmb;
+        newLine.yawField.setText(original.yawField.getText());
+        newLine.pitchField.setText(original.pitchField.getText());
+        return newLine;
+    }
+
+    private void saveState() {
+        java.util.List<MacroLine> snapshot = new java.util.ArrayList<>();
+        for (MacroLine l : this.macroLines) {
+            snapshot.add(cloneLine(l));
+        }
+        undoStack.add(snapshot);
+        if (undoStack.size() > MAX_UNDO_STEPS) {
+            undoStack.remove(0);
+        }
+    }
+
+    private void undo() {
+        if (!undoStack.isEmpty()) {
+            this.macroLines = undoStack.remove(undoStack.size() - 1);
+            if (selectedIndex >= macroLines.size()) selectedIndex = macroLines.size() - 1;
+            updateFocusAndScroll();
+        }
+    }
+
     @Override
     public void updateScreen() {
+        if (this.renamingIndex != -1) {
+            this.renameField.updateCursorCounter();
+        }
+
         if (this.selectedIndex > -1 && this.selectedIndex < macroLines.size()) {
             MacroLine l = this.macroLines.get(this.selectedIndex);
 
@@ -371,6 +831,8 @@ public class GuiMacro extends CyvGui {
 
         this.fileName.updateCursorCounter();
 
+        int listHeight = sizeY - 40;
+        maxScroll = (int) Math.max(0, (macroLines.size() * fontRendererObj.FONT_HEIGHT * 2) - listHeight);
         //smooth scrolling
         this.scroll += this.vScroll;
         this.vScroll *= 0.75;
@@ -384,6 +846,10 @@ public class GuiMacro extends CyvGui {
     public void onGuiClosed() {
         Keyboard.enableRepeatEvents(false);
         super.onGuiClosed();
+
+        if (macroLines == null || macroLines.isEmpty()) return;
+
+        String current = CyvClientConfig.getString("currentMacro", "macro");
 
         //save macro
         try {
@@ -446,8 +912,8 @@ public class GuiMacro extends CyvGui {
             this.yawField.setEnableBackgroundDrawing(false);
             this.pitchField.setEnableBackgroundDrawing(false);
 
-            this.yawField.setText("0.0");
-            this.pitchField.setText("0.0");
+            this.yawField.setText("");
+            this.pitchField.setText("");
         }
 
         public void drawEntry(int slotIndex, int scroll, int mouseX, int mouseY, boolean isSelected) {
@@ -479,11 +945,6 @@ public class GuiMacro extends CyvGui {
             GuiUtils.drawRoundedRect(sr.getScaledWidth()/2 - 8, yHeight + 2,
                     sr.getScaledWidth()/2 - 3+31, yHeight + mc.fontRendererObj.FONT_HEIGHT*2 - 2,
                     2, CyvForge.theme.highlight);
-
-            if (!isSelected) {
-                this.yawField.setFocused(false);
-                this.pitchField.setFocused(false);
-            }
 
             this.yawField.drawTextBox();
             this.pitchField.drawTextBox();

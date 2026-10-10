@@ -27,6 +27,18 @@ public class LandingBlockOffset {
 
         boolean isForcedTick = (b.targetTick != -1);
 
+        if (!b.mode.equals(LandingMode.enter)) {
+            AxisAlignedBB playerHitbox = Minecraft.getMinecraft().thePlayer.getEntityBoundingBox();
+            double playerHeight = playerHitbox.maxY - playerHitbox.minY;
+            for (int j = 0; j < b.bb.length; j++) {
+                if (j == i) continue;
+                if (b.bb[j].maxY <= b.bb[i].maxY) continue;
+                if (b.bb[j].minY >= b.bb[i].maxY + playerHeight) continue;
+                if (b.bb[j].minX <= b.bb[i].minX && b.bb[j].maxX >= b.bb[i].maxX &&
+                        b.bb[j].minZ <= b.bb[i].minZ && b.bb[j].maxZ >= b.bb[i].maxZ) return;
+            }
+        }
+
         if (!b.isLiquid && !isForcedTick && y < b.bb[i].minY) return; //below bottom y
         else if (!b.isLiquid && !isForcedTick && y < b.bb[i].maxY && b.mode.equals(LandingMode.enter)) { //inside block on y
             xOffset = checkX(x, b, i);
@@ -97,11 +109,34 @@ public class LandingBlockOffset {
     }
 
     public static Double checkX(double x, LandingBlock b, int i) {
-        AxisAlignedBB playerBB = Minecraft.getMinecraft().thePlayer.getEntityBoundingBox();
+        Minecraft mc = Minecraft.getMinecraft();
+        AxisAlignedBB playerBB = mc.thePlayer.getEntityBoundingBox();
         double halfPlayerSize = (playerBB.maxX - playerBB.minX) / 2;
+        double fullPlayerSize = halfPlayerSize * 2;
 
-        double rightWallOffset = (b.xMinWall == null) ? 0 : (b.bb[i].minX - b.xMinWall) - halfPlayerSize*2;
-        double leftWallOffset = (b.xMaxWall == null) ? 0 : (b.xMaxWall - b.bb[i].maxX) - halfPlayerSize*2;
+        double rightWallOffset = (b.xMinWall == null) ? 0 : (b.bb[i].minX - b.xMinWall) - fullPlayerSize;
+        double leftWallOffset = (b.xMaxWall == null) ? 0 : (b.xMaxWall - b.bb[i].maxX) - fullPlayerSize;
+
+        if (leftWallOffset == 0) {
+            AxisAlignedBB checkBB = new AxisAlignedBB(b.bb[i].maxX, b.bb[i].maxY, b.bb[i].minZ, b.bb[i].maxX + 0.1, b.bb[i].maxY + 0.5, b.bb[i].maxZ);
+            for (AxisAlignedBB collisionBB : mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, checkBB)) {
+                if (collisionBB.minX >= b.bb[i].maxX && collisionBB.minY < b.bb[i].maxY) {
+                    leftWallOffset = -fullPlayerSize;
+                    break;
+                }
+            }
+        }
+
+        if (rightWallOffset == 0) {
+            AxisAlignedBB checkBB = new AxisAlignedBB(b.bb[i].minX - 0.1, b.bb[i].maxY, b.bb[i].minZ, b.bb[i].minX, b.bb[i].maxY + 0.5, b.bb[i].maxZ);
+            for (AxisAlignedBB collisionBB : mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, checkBB)) {
+                if (collisionBB.maxX <= b.bb[i].minX && collisionBB.minY < b.bb[i].maxY) {
+                    rightWallOffset = -fullPlayerSize;
+                    break;
+                }
+            }
+        }
+
         if (rightWallOffset > 0) rightWallOffset = 0;
         if (leftWallOffset > 0) leftWallOffset = 0;
 
@@ -115,12 +150,34 @@ public class LandingBlockOffset {
     }
 
     public static Double checkZ(double z, LandingBlock b, int i) {
-        AxisAlignedBB playerBB = Minecraft.getMinecraft().thePlayer.getEntityBoundingBox();
+        Minecraft mc = Minecraft.getMinecraft();
+        AxisAlignedBB playerBB = mc.thePlayer.getEntityBoundingBox();
         double halfPlayerSize = (playerBB.maxZ - playerBB.minZ) / 2;
+        double fullPlayerSize = halfPlayerSize * 2;
 
-        //as max wall gets closer to block, frontwall decreases towards 0
-        double backWallOffset = (b.zMinWall == null) ? 0 : (b.bb[i].minZ - b.zMinWall) - halfPlayerSize*2;
-        double frontWallOffset = (b.zMaxWall == null) ? 0 : (b.zMaxWall - b.bb[i].maxZ) - halfPlayerSize*2;
+        double backWallOffset = (b.zMinWall == null) ? 0 : (b.bb[i].minZ - b.zMinWall) - fullPlayerSize;
+        double frontWallOffset = (b.zMaxWall == null) ? 0 : (b.zMaxWall - b.bb[i].maxZ) - fullPlayerSize;
+
+        if (frontWallOffset == 0) {
+            AxisAlignedBB checkBB = new AxisAlignedBB(b.bb[i].minX, b.bb[i].maxY, b.bb[i].maxZ, b.bb[i].maxX, b.bb[i].maxY + 0.5, b.bb[i].maxZ + 0.1);
+            for (AxisAlignedBB collisionBB : mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, checkBB)) {
+                if (collisionBB.minZ >= b.bb[i].maxZ && collisionBB.minY < b.bb[i].maxY) {
+                    frontWallOffset = -fullPlayerSize;
+                    break;
+                }
+            }
+        }
+
+        if (backWallOffset == 0) {
+            AxisAlignedBB checkBB = new AxisAlignedBB(b.bb[i].minX, b.bb[i].maxY, b.bb[i].minZ - 0.1, b.bb[i].maxX, b.bb[i].maxY + 0.5, b.bb[i].minZ);
+            for (AxisAlignedBB collisionBB : mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, checkBB)) {
+                if (collisionBB.maxZ <= b.bb[i].minZ && collisionBB.minY < b.bb[i].maxY) {
+                    backWallOffset = -fullPlayerSize;
+                    break;
+                }
+            }
+        }
+
         if (backWallOffset > 0) backWallOffset = 0;
         if (frontWallOffset > 0) frontWallOffset = 0;
 

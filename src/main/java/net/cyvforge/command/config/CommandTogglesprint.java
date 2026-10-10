@@ -1,0 +1,39 @@
+package net.cyvforge.command.config;
+
+import net.cyvforge.CyvForge;
+import net.cyvforge.config.CyvClientConfig;
+import net.cyvforge.keybinding.KeybindingTogglesprint;
+import net.cyvforge.util.defaults.CyvCommand;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.command.ICommandSender;
+
+public class CommandTogglesprint extends CyvCommand {
+    public CommandTogglesprint() {
+        super("togglesprint");
+        this.hasArgs = false;
+        this.helpString = "Toggles auto-sprint mode.";
+
+        this.aliases.add("ts");
+        this.aliases.add("sprint");
+    }
+
+    @Override
+    public void run(ICommandSender sender, String[] args) {
+        boolean newState = !KeybindingTogglesprint.isSprintToggled();
+
+        if (newState) {
+            KeybindingTogglesprint.currentMode = CyvClientConfig.getBoolean("invFmm", true)
+                    ? KeybindingTogglesprint.SprintMode.FMM : KeybindingTogglesprint.SprintMode.JAM;
+        } else {
+            KeybindingTogglesprint.currentMode = KeybindingTogglesprint.SprintMode.DISABLED;
+
+            GameSettings settings = Minecraft.getMinecraft().gameSettings;
+            KeyBinding.setKeyBindState(settings.keyBindSprint.getKeyCode(), false);
+        }
+
+        String status = newState ? "enabled" : "disabled";
+        CyvForge.sendChatMessage("Toggle sprint has been " + status + ".");
+    }
+}

@@ -11,6 +11,11 @@ public class CyvClientConfig {
     public HashMap<String,ConfigValue<?>> configFields = new LinkedHashMap<>();
 
     public void init() {
+        if (!configFields.isEmpty()) {
+            new Exception("CyvClientConfig.init() executed again!").printStackTrace();
+            return;
+        }
+
         // special globals
         configFields.put("color1", new ConfigValue<String>("aqua"));
         configFields.put("color2", new ConfigValue<String>("white"));
@@ -39,7 +44,7 @@ public class CyvClientConfig {
         configFields.put("frameBased", new ConfigValue<Boolean>(false));
         configFields.put("WADdisplay", new ConfigValue<Boolean>(false));
         configFields.put("simpleBlip", new ConfigValue<Boolean>(false));
-        configFields.put("markInSidestep", new ConfigValue<Boolean>(true));
+        configFields.put("markDisplay", new ConfigValue<String>("Sidestep"));
         configFields.put("detectWobble", new ConfigValue<Boolean>(false));
         configFields.put("detectStrafejam", new ConfigValue<Boolean>(false));
         configFields.put("strafejamJamOnly", new ConfigValue<Boolean>(true));
@@ -49,6 +54,24 @@ public class CyvClientConfig {
         configFields.put("resetRunOnLand", new ConfigValue<Boolean>(false));
         configFields.put("hideRuntimeIfZero", new ConfigValue<Boolean>(false));
         configFields.put("hideRuntimeLabelName", new ConfigValue<Boolean>(false));
+        // input history
+        configFields.put("ih_size", new ConfigValue<Integer>(75));
+        configFields.put("ih_historyLength", new ConfigValue<Integer>(20));
+        configFields.put("ih_alwaysVisible", new ConfigValue<Boolean>(true));
+        configFields.put("ih_visLength", new ConfigValue<Integer>(60));
+        configFields.put("ih_colorMode", new ConfigValue<String>("Color1 - Color2"));
+        configFields.put("ih_invertList", new ConfigValue<Boolean>(true));
+        configFields.put("ih_trackFacing", new ConfigValue<Boolean>(false));
+        configFields.put("ih_trackTurnAmount", new ConfigValue<Boolean>(false));
+        configFields.put("ih_noYawBreak", new ConfigValue<Boolean>(false));
+        configFields.put("ih_inputRelease", new ConfigValue<Boolean>(true));
+        configFields.put("ih_groundJumpReset", new ConfigValue<Boolean>(true));
+        configFields.put("ih_treatLandingAsAir", new ConfigValue<Boolean>(true));
+        configFields.put("ih_jumpNoBreak", new ConfigValue<Boolean>(true));
+        configFields.put("ih_pressReleaseTicks", new ConfigValue<Boolean>(true));
+        configFields.put("ih_airGroundIndicator", new ConfigValue<Boolean>(false));
+        configFields.put("ih_ignoreSprUntilInput", new ConfigValue<Boolean>(true));
+        configFields.put("ih_resetRMB", new ConfigValue<Boolean>(true));
 
         // macros
         configFields.put("currentMacro", new ConfigValue<String>("macro"));
@@ -56,6 +79,8 @@ public class CyvClientConfig {
         configFields.put("macroHUDColor", new ConfigValue<String>("Default"));
         configFields.put("macroClipEnabled", new ConfigValue<Boolean>(false));
         configFields.put("macroClipTicks", new ConfigValue<Integer>(100));
+        configFields.put("recentMacros", new ConfigValue<String>(""));
+        configFields.put("macroShortcutsRequireMod", new ConfigValue<Boolean>(true));
 
         // inertia listener
         configFields.put("inertiaEnabled", new ConfigValue<Boolean>(false));

@@ -7,13 +7,7 @@ import net.cyvforge.discord.DiscordRPCEventManager;
 import net.cyvforge.discord.DiscordRPCHandler;
 import net.cyvforge.event.CommandInitializer;
 import net.cyvforge.event.ConfigLoader;
-import net.cyvforge.event.events.ChatSuggestionsHandler;
-import net.cyvforge.event.events.GuiHandler;
-import net.cyvforge.event.events.KeyInputHandler;
-import net.cyvforge.event.events.MacroListener;
-import net.cyvforge.event.events.MacroRecorder;
-import net.cyvforge.event.events.ParkourTickListener;
-import net.cyvforge.event.events.SignCommandListener;
+import net.cyvforge.event.events.*;
 import net.cyvforge.hud.HUDManager;
 import net.cyvforge.keybinding.ChatMacro.ChatMacroListener;
 import net.cyvforge.keybinding.ChatMacro.ChatMacroManager;
@@ -75,6 +69,7 @@ public class CyvForge {
 		MinecraftForge.EVENT_BUS.register(new SignCommandListener());
 		MinecraftForge.EVENT_BUS.register(new ChatMacroListener());
 		MinecraftForge.EVENT_BUS.register(new DiscordRPCEventManager());
+		MinecraftForge.EVENT_BUS.register(new InputHistoryManager());
 
 		if (CyvClientConfig.getBoolean("fullbright", true)) {
 			Minecraft.getMinecraft().gameSettings.gammaSetting = 1000f;
